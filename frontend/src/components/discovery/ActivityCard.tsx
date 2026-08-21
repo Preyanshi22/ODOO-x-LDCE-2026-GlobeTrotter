@@ -1,0 +1,7 @@
+import { Clock3, MapPin, Plus, Star } from 'lucide-react';
+import type { Activity } from '../../types';
+import { useApp } from '../../context/AppContext';
+import { formatMoney } from '../../context/AppContext';
+import { Button } from '../ui/Button';
+import { SafeImage } from '../ui/Image';
+export function ActivityCard({ activity, tripId, stopId }: { activity: Activity; tripId?: string; stopId?: string }) { const { selectedTripId, selectedTrip, addActivity } = useApp(); const targetStop = stopId ?? selectedTrip?.stops[0]?.id; return <article className="activity-card"><SafeImage src={activity.image} alt={activity.name} className="activity-image" /><div className="activity-body"><div className="activity-topline"><span className="category-pill">{activity.category}</span><span className="rating"><Star size={13} fill="currentColor" /> {activity.rating}</span></div><h3>{activity.name}</h3><p className="activity-location"><MapPin size={13} /> {activity.city}, {activity.country}</p><p className="activity-description">{activity.description}</p><div className="activity-meta"><span><Clock3 size={14} /> {activity.duration}</span><strong>{formatMoney(activity.price)} <small>/ person</small></strong></div><Button className="button-small" variant="secondary" icon={<Plus size={15} />} onClick={() => selectedTripId && targetStop && addActivity(tripId ?? selectedTripId, targetStop, activity)} disabled={!selectedTripId || !targetStop}>Add activity</Button></div></article>; }

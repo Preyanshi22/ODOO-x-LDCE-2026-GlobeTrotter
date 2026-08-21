@@ -1,0 +1,2 @@
+import type { ReactNode } from 'react';
+export function StatCard({ label, value, detail, icon, tone = 'amber' }: { label: string; value: string; detail?: string; icon: ReactNode; tone?: string }) { return <article className={`stat-card stat-${tone}`}><div className="stat-icon">{icon}</div><div><p className="stat-label">{label}</p><strong className="stat-value">{value}</strong>{detail && <p className="stat-detail">{detail}</p>}</div></article>; }
