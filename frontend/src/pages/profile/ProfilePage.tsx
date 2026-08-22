@@ -1,9 +1,10 @@
-import { Camera, Check, Globe2, Mail, MapPin, Phone, Save, UserRound, Eye, Calendar, ArrowRight } from 'lucide-react';
+import { Camera, Check, Globe2, Mail, MapPin, Phone, Save, UserRound, Eye, Calendar, ArrowRight, LogOut } from 'lucide-react';
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { SafeImage } from '../../components/ui/Image';
 import { useApp, formatDateRange } from '../../context/AppContext';
+import { supabaseAuth } from '../../services/supabaseAuth';
 
 export function ProfilePage() {
   const { profile, updateProfile, trips, addToast } = useApp();
@@ -25,6 +26,12 @@ export function ProfilePage() {
     updateProfile(form);
     setIsEditing(false);
     addToast('Your profile details were updated.');
+  };
+
+  const handleSignOut = () => {
+    supabaseAuth.logout();
+    addToast('Signed out of your GlobeTrotter account.', 'info');
+    navigate('/login');
   };
 
   const defaultAvatar = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
@@ -63,7 +70,7 @@ export function ProfilePage() {
   return (
     <div className="profile-page-v2" style={{ padding: '0', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header Banner */}
-      <div className="page-heading-row" style={{ marginBottom: '18px', marginTop: '0' }}>
+      <div className="page-heading-row" style={{ marginBottom: '18px', marginTop: '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '12px' }}>
             User Profile Pages (Screen 7)
@@ -75,6 +82,9 @@ export function ProfilePage() {
             User details with appropriate option to edit those information.
           </p>
         </div>
+        <Button variant="danger" icon={<LogOut size={16} />} onClick={handleSignOut}>
+          Sign Out
+        </Button>
       </div>
 
       {/* Top Box: Image of the User + User Details */}
@@ -155,13 +165,18 @@ export function ProfilePage() {
                 Manage your personal info, contact details, and location preferences.
               </p>
             </div>
-            <Button
-              variant={isEditing ? 'ghost' : 'secondary'}
-              onClick={() => setIsEditing(!isEditing)}
-              icon={isEditing ? <Check size={16} /> : <UserRound size={16} />}
-            >
-              {isEditing ? 'Cancel Edit' : 'Edit Details'}
-            </Button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Button
+                variant={isEditing ? 'ghost' : 'secondary'}
+                onClick={() => setIsEditing(!isEditing)}
+                icon={isEditing ? <Check size={16} /> : <UserRound size={16} />}
+              >
+                {isEditing ? 'Cancel Edit' : 'Edit Details'}
+              </Button>
+              <Button variant="danger" icon={<LogOut size={16} />} onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            </div>
           </div>
 
           <form onSubmit={save}>

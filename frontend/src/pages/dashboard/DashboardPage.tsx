@@ -5,6 +5,7 @@ import { DestinationCard } from '../../components/discovery/DestinationCard';
 import { Button } from '../../components/ui/Button';
 import { SafeImage } from '../../components/ui/Image';
 import { formatDateRange, formatMoney, useApp } from '../../context/AppContext';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 
 export function DashboardPage() {
   const { trips, destinations, profile } = useApp();
@@ -61,12 +62,24 @@ export function DashboardPage() {
 
   // 1. Live Filtered Regional Selections
   const filteredRegions = useMemo(() => {
-    if (!searchQuery.trim()) return regions;
-    const q = searchQuery.toLowerCase().trim();
-    return regions.filter(
-      (r) => r.name.toLowerCase().includes(q) || r.subtitle.toLowerCase().includes(q) || r.query.toLowerCase().includes(q)
-    );
-  }, [regions, searchQuery]);
+    let result = regions;
+    if (selectedRegionFilter !== 'all') {
+      const rf = selectedRegionFilter.toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.name.toLowerCase().includes(rf) ||
+          r.subtitle.toLowerCase().includes(rf) ||
+          r.query.toLowerCase().includes(rf)
+      );
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (r) => r.name.toLowerCase().includes(q) || r.subtitle.toLowerCase().includes(q) || r.query.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [regions, searchQuery, selectedRegionFilter]);
 
   // 2. Live Filtered Trips
   const processedTrips = useMemo(() => {
@@ -90,12 +103,24 @@ export function DashboardPage() {
 
   // 3. Live Filtered Destinations
   const filteredDestinations = useMemo(() => {
-    if (!searchQuery.trim()) return destinations.slice(0, 4);
-    const q = searchQuery.toLowerCase().trim();
-    return destinations.filter(
-      (d) => d.city.toLowerCase().includes(q) || d.country.toLowerCase().includes(q) || d.region.toLowerCase().includes(q) || d.tags.some((t) => t.toLowerCase().includes(q))
-    );
-  }, [destinations, searchQuery]);
+    let result = destinations;
+    if (selectedRegionFilter !== 'all') {
+      const rf = selectedRegionFilter.toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.country.toLowerCase().includes(rf) ||
+          d.region.toLowerCase().includes(rf) ||
+          d.city.toLowerCase().includes(rf)
+      );
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (d) => d.city.toLowerCase().includes(q) || d.country.toLowerCase().includes(q) || d.region.toLowerCase().includes(q) || d.tags.some((t) => t.toLowerCase().includes(q))
+      );
+    }
+    return result.slice(0, 4);
+  }, [destinations, searchQuery, selectedRegionFilter]);
 
   const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -151,33 +176,55 @@ export function DashboardPage() {
           )}
         </form>
 
-        <div className="overview-toolbar-actions">
-          <div className="toolbar-select-wrap">
-            <Layers size={15} />
-            <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} aria-label="Group by option">
-              <option value="all">Group by (All)</option>
-              <option value="upcoming">Upcoming Trips</option>
-              <option value="completed">Completed Trips</option>
-            </select>
-          </div>
+        <div className="overview-toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <CustomSelect
+            value={groupBy}
+            onChange={setGroupBy}
+            icon={<Layers size={15} />}
+            options={[
+              { value: 'all', label: 'Group by (All)' },
+              { value: 'upcoming', label: 'Upcoming Trips' },
+              { value: 'completed', label: 'Completed Trips' }
+            ]}
+            ariaLabel="Group by option"
+          />
 
           <button
+            type="button"
             className={`toolbar-button ${showFilters ? 'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
             aria-label="Filter"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              border: showFilters ? '1px solid #ebdcc2' : '1px solid #e2ddd3',
+              borderRadius: '99px',
+              padding: '10px 18px',
+              background: showFilters ? 'var(--amber-soft)' : '#ffffff',
+              color: showFilters ? 'var(--amber-dark)' : 'var(--ink)',
+              fontWeight: 600,
+              fontSize: '12px',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+              transition: 'all 0.2s ease'
+            }}
           >
             <SlidersHorizontal size={15} />
             <span>Filter</span>
           </button>
 
-          <div className="toolbar-select-wrap">
-            <ArrowDownUp size={15} />
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} aria-label="Sort by option">
-              <option value="recent">Sort by...</option>
-              <option value="name">Name (A–Z)</option>
-              <option value="budget">Budget (High–Low)</option>
-            </select>
-          </div>
+          <CustomSelect
+            value={sortBy}
+            onChange={setSortBy}
+            icon={<ArrowDownUp size={15} />}
+            options={[
+              { value: 'recent', label: 'Sort by...' },
+              { value: 'name', label: 'Name (A–Z)' },
+              { value: 'budget', label: 'Budget (High–Low)' }
+            ]}
+            ariaLabel="Sort by option"
+          />
         </div>
       </section>
 

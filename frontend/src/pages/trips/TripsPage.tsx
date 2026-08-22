@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { TripCard } from '../../components/trips/TripCard';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { useApp } from '../../context/AppContext';
 import type { Trip, TripStatus } from '../../types';
 
@@ -76,13 +77,16 @@ export function TripsPage() {
             <input placeholder="Search trips" value={query} onChange={(e) => setQuery(e.target.value)} />
           </label>
           <button className="filter-button"><SlidersHorizontal size={15} /> Group by / Filter</button>
-          <label className="sort-select">
-            <ArrowDownUp size={14} />
-            <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort trips">
-              <option value="recent">Recently added</option>
-              <option value="name">Name A–Z</option>
-            </select>
-          </label>
+          <CustomSelect
+            value={sort}
+            onChange={setSort}
+            icon={<ArrowDownUp size={14} />}
+            options={[
+              { value: 'recent', label: 'Recently added' },
+              { value: 'name', label: 'Name A–Z' }
+            ]}
+            ariaLabel="Sort trips"
+          />
         </div>
       </div>
 
