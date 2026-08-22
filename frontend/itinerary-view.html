@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerary View - GlobeTrotter</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1>GlobeTrotter</h1>
+                <p>Travel Reimagined</p>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Journeys</a></li>
+                    <li><a href="#">Destinations</a></li>
+                    <li><a href="#">Collections</a></li>
+                </ul>
+            </nav>
+            <div class="user-actions">
+                <button class="btn btn-outline">Profile</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <!-- Itinerary View -->
+            <section class="itinerary-view" id="itinerary-view">
+                <!-- Loading state -->
+                <div class="loading-state">
+                    <p>Loading your journey...</p>
+                </div>
+
+                <!-- Error state -->
+                <div class="error-state">
+                    <p>Journey not found. Please check the journey ID and try again.</p>
+                    <a href="index.html" class="btn btn-outline">Back to Journeys</a>
+                </div>
+
+                <!-- Journey content -->
+                <div class="journey-content">
+                    <!-- Journey Hero -->
+                    <div class="journey-hero">
+                        <img src="" alt="" class="journey-hero-image" id="journey-hero-image">
+                        <div class="journey-hero-overlay"></div>
+                        <div class="journey-hero-content">
+                            <h1 class="journey-hero-title" id="journey-hero-title"></h1>
+                            <div class="journey-hero-meta" id="journey-hero-meta"></div>
+                        </div>
+                    </div>
+
+                    <!-- Trip Overview -->
+                    <div class="trip-overview">
+                        <div class="overview-item">
+                            <span class="overview-label">DESTINATIONS</span>
+                            <span class="overview-value" id="overview-destinations"></span>
+                        </div>
+                        <div class="overview-item">
+                            <span class="overview-label">DATES</span>
+                            <span class="overview-value" id="overview-dates"></span>
+                        </div>
+                        <div class="overview-item">
+                            <span class="overview-label">DURATION</span>
+                            <span class="overview-value" id="overview-duration"></span>
+                        </div>
+                        <div class="overview-item">
+                            <span class="overview-label">ESTIMATED COST</span>
+                            <span class="overview-value" id="overview-estimated-cost"></span>
+                        </div>
+                        <div class="overview-item">
+                            <span class="overview-label">BUDGET</span>
+                            <span class="overview-value" id="overview-budget"></span>
+                        </div>
+                    </div>
+
+                    <!-- Day Navigation (optional) -->
+                    <nav class="day-navigation" id="day-navigation">
+                        <!-- Day links will be inserted here -->
+                    </nav>
+
+                    <!-- Day-by-Day Itinerary -->
+                    <div class="day-by-day-itinerary" id="day-by-day-itinerary">
+                        <!-- Days will be inserted here -->
+                    </div>
+
+                    <!-- Trip Summary -->
+                    <div class="trip-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">ESTIMATED COST</span>
+                            <span class="summary-value" id="summary-estimated-cost">₹0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">BUDGET</span>
+                            <span class="summary-value" id="summary-budget">₹80,000</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">REMAINING</span>
+                            <span class="summary-value" id="summary-remaining">₹80,000</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">CITIES</span>
+                            <span class="summary-value" id="summary-cities">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">ACTIVITIES</span>
+                            <span class="summary-value" id="summary-activities">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Optional Next Actions -->
+                    <div class="next-actions">
+                        <a href="#" class="btn btn-outline" id="share-journey-btn">SHARE JOURNEY</a>
+                        <a href="#" class="btn btn-outline" id="budget-breakdown-btn">BUDGET BREAKDOWN</a>
+                        <a href="#" class="btn btn-primary" id="edit-journey-btn">EDIT JOURNEY</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 GlobeTrotter. All rights reserved.</p>
+            <div class="luxury-divider"></div>
+            <p class="text-center" style="font-size: 0.75rem; color: #999; margin-top: 1.5rem;">
+                A luxury travel experience platform
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get journey ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const journeyId = parseInt(urlParams.get('id'));
+
+            if (!journeyId) {
+                showError();
+                return;
+            }
+
+            // Load journey data
+            const journeys = window.GlobeTrotter.Journeys.getAll();
+            const journey = journeys.find(j => j.id === journeyId);
+
+            if (!journey) {
+                showError();
+                return;
+            }
+
+            // Hide loading and error states, show journey content
+            document.querySelector('.loading-state').style.display = 'none';
+            document.querySelector('.error-state').style.display = 'none';
+            document.querySelector('.journey-content').style.display = 'block';
+
+            // Populate the journey view
+            populateJourneyView(journey);
+        });
+
+        function showError() {
+            document.querySelector('.loading-state').style.display = 'none';
+            document.querySelector('.error-state').style.display = 'block';
+            document.querySelector('.journey-content').style.display = 'none';
+        }
+
+        function populateJourneyView(journey) {
+            // Set journey hero
+            const heroImage = document.getElementById('journey-hero-image');
+            const heroTitle = document.getElementById('journey-hero-title');
+            const heroMeta = document.getElementById('journey-hero-meta');
+
+            // Determine hero image: use first stop's city image or journey's image or default
+            let heroImageUrl = 'assets/images/Swiss Alps Majesty.png'; // default
+            if (journey.image) {
+                heroImageUrl = journey.image;
+            } else if (journey.stops && journey.stops.length > 0) {
+                // Try to get image for the first stop's city
+                heroImageUrl = getCityImageUrl(journey.stops[0].city);
+            }
+            heroImage.src = heroImageUrl;
+            heroImage.alt = `${journey.name} journey`;
+
+            heroTitle.textContent = journey.name;
+
+            // Build hero meta: destinations and dates
+            const destinations = journey.stops ? journey.stops.map(s => s.city).join(' · ') : 'Unknown';
+            const startDate = new Date(journey.startDate);
+            const endDate = new Date(journey.endDate);
+            const dateRange = `${formatDate(startDate)} — ${formatDate(endDate)}`;
+            const duration = Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1;
+
+            heroMeta.innerHTML = `
+                <span>${destinations}</span>
+                <span>${dateRange} • ${duration} DAYS</span>
+            `;
+
+            // Set trip overview
+            document.getElementById('overview-destinations').textContent = destinations;
+            document.getElementById('overview-dates').textContent = dateRange;
+            document.getElementById('overview-duration').textContent = `${duration} DAYS`;
+
+            // Calculate estimated cost from activities
+            let totalEstimatedCost = 0;
+            let totalCities = journey.stops ? journey.stops.length : 0;
+            let totalActivities = 0;
+
+            if (journey.stops) {
+                journey.stops.forEach(stop => {
+                    if (stop.activities) {
+                        stop.activities.forEach(activity => {
+                            totalEstimatedCost += activity.estimatedCost || 0;
+                        });
+                        totalActivities += stop.activities.length;
+                    }
+                });
+            }
+
+            document.getElementById('overview-estimated-cost').textContent = `₹${totalEstimatedCost.toLocaleString()}`;
+            document.getElementById('overview-budget').textContent = `₹${journey.budget.toLocaleString()}`;
+
+            // Set trip summary (same as overview but with remaining)
+            const remainingBudget = journey.budget - totalEstimatedCost;
+            document.getElementById('summary-estimated-cost').textContent = `₹${totalEstimatedCost.toLocaleString()}`;
+            document.getElementById('summary-budget').textContent = `₹${journey.budget.toLocaleString()}`;
+            document.getElementById('summary-remaining').textContent = `₹${Math.max(0, remainingBudget).toLocaleString()}`;
+            if (remainingBudget < 0) {
+                document.getElementById('summary-remaining').textContent = `-₹${Math.abs(remainingBudget).toLocaleString()}`;
+                document.getElementById('summary-remaining').classList.add('over-budget');
+            }
+            document.getElementById('summary-cities').textContent = totalCities;
+            document.getElementById('summary-activities').textContent = totalActivities;
+
+            // Generate day navigation (if there are many days)
+            const dayNav = document.getElementById('day-navigation');
+            // We'll generate day navigation only if there are more than 3 days
+            // For simplicity, we'll skip day navigation in this version and just show the itinerary scrolling.
+            // If we want to add it, we can uncomment and implement.
+            // dayNav.innerHTML = generateDayNavigation(journey);
+
+            // Generate day-by-day itinerary
+            const itineraryContainer = document.getElementById('day-by-day-itinerary');
+            itineraryContainer.innerHTML = generateDayByDayItinerary(journey);
+
+            // Set edit journey button to go back to builder
+            const editBtn = document.getElementById('edit-journey-btn');
+            if (editBtn) {
+                editBtn.href = `itinerary-builder.html?id=${journey.id}`;
+            }
+
+            // Set share journey button (placeholder)
+            const shareBtn = document.getElementById('share-journey-btn');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert('Feature coming soon: Share Journey');
+                });
+            }
+
+            // Set budget breakdown button
+            const budgetBtn = document.getElementById('budget-breakdown-btn');
+            if (budgetBtn) {
+                budgetBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    window.location.href = `budget-breakdown.html?id=${journey.id}`;
+                });
+            }
+        }
+
+        function getCityImageUrl(city) {
+            // Map city names to image files (lowercase, replace spaces with hyphens or use known mapping)
+            const cityImageMap = {
+                "tokyo": "assets/images/Tokyo Modern Contrast.png",
+                "kyoto": "assets/images/Kyoto Temple Scene.png",
+                "osaka": "assets/images/Osaka Street Elegance.png",
+                "paris": "assets/images/Parisian Winter Romance.png",
+                "swiss alps": "assets/images/Swiss Alps Majesty.png",
+                "prague": "assets/images/Prague Old Town Elegance.png",
+                "santorini": "assets/images/Santorini Caldera View.png",
+                "amalfi coast": "assets/images/Amalfi Coast Drive.png",
+                "barcelona": "assets/images/Barcelona Architectural Detail.png",
+                "zermatt": "assets/images/Swiss Alps Majesty.png", // approximate
+                "interlaken": "assets/images/Swiss Alps Majesty.png", // approximate
+                "jungfrau region": "assets/images/Swiss Alps Majesty.png" // approximate
+            };
+
+            const key = city.toLowerCase();
+            return cityImageMap[key] || 'assets/images/Swiss Alps Majesty.png'; // fallback
+        }
+
+        function formatDate(date) {
+            if (!(date instanceof Date)) date = new Date(date);
+            return new Intl.DateTimeFormat('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            }).format(date).replace(/\s\d{4}$/, ''); // Remove year if same year
+        }
+
+        function generateDayByDayItinerary(journey) {
+            if (!journey.stops || journey.stops.length === 0) {
+                return '<p class="text-center py-8">No itinerary data available.</p>';
+            }
+
+            let itineraryHTML = '';
+
+            journey.stops.forEach((stop, stopIndex) => {
+                // Add city header if it's not the first stop or if we want to show it for each stop
+                // We'll show the city name at the start of each stop's section
+                if (stopIndex > 0) {
+                    // Add a travel divider between cities
+                    itineraryHTML += `
+                        <div class="city-divider">
+                            <p>TRAVEL TO ${stop.city}</p>
+                        </div>
+                    `;
+                }
+
+                // Add city name as a section header
+                itineraryHTML += `
+                    <div class="city-section">
+                        <h2 class="city-name">${stop.city}</h2>
+                        ${stop.country ? `<p class="country-name">${stop.country}</p>` : ''}
+                    </div>
+                `;
+
+                // Generate days for this stop
+                const startDate = new Date(stop.startDate);
+                const endDate = new Date(stop.endDate);
+                const daysDiff = Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1;
+
+                for (let day = 0; day < daysDiff; day++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(currentDate.getDate() + day);
+
+                    const dayNumber = day + 1;
+                    const dayDate = formatDate(currentDate);
+
+                    // Get activities for this specific day
+                    const dayActivities = stop.activities.filter(activity => {
+                        const activityDate = new Date(activity.date);
+                        return activityDate.toDateString() === currentDate.toDateString();
+                    });
+
+                    // Sort activities by time
+                    const sortedActivities = [...dayActivities].sort((a, b) => {
+                        const timeA = new Date(`1970-01-01T${a.startTime}:00`).getTime();
+                        const timeB = new Date(`1970-01-01T${b.startTime}:00`).getTime();
+                        return timeA - timeB;
+                    });
+
+                    itineraryHTML += `
+                        <div class="day-section">
+                            <div class="day-header">
+                                <span class="day-label">DAY ${String(dayNumber).padStart(2, '0')}</span>
+                                <span class="day-date">${dayDate}</span>
+                            </div>
+                            <div class="day-timeline">
+                                ${generateDayTimeline(sortedActivities)}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            return itineraryHTML;
+        }
+
+        function generateDayTimeline(activities) {
+            if (!activities || activities.length === 0) {
+                return '<div class="empty-day"><p>No activities planned for this day.</p></div>';
+            }
+
+            let timelineHTML = '';
+
+            activities.forEach((activity, index) => {
+                // Activity time block
+                timelineHTML += `
+                    <div class="time-block">
+                        <div class="time-label">${activity.startTime} — ${activity.endTime}</div>
+                        <div class="activity-info">
+                            <h3 class="activity-name">${activity.name}</h3>
+                            <p class="activity-category">${activity.category}</p>
+                            ${activity.estimatedCost > 0 ?
+                                `<p class="activity-cost">₹${activity.estimatedCost.toLocaleString()}</p>` :
+                                `<p class="activity-cost">FREE</p>`}
+                            ${activity.description ? `<p class="activity-description">${activity.description}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Add separator between activities (except after the last one)
+                if (index < activities.length - 1) {
+                    timelineHTML += '<div class="timeline-separator"></div>';
+                }
+            });
+
+            return timelineHTML;
+        }
+    </script>
+</body>
+</html>
