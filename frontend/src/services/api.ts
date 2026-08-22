@@ -147,4 +147,44 @@ export const api = {
     if (!res.ok) throw new Error('Failed to generate AI itinerary');
     return await res.json();
   },
+
+  async fetchCommunityPosts(): Promise<any[]> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/community`);
+      if (!res.ok) throw new Error('Failed to fetch posts');
+      return await res.json();
+    } catch {
+      return [];
+    }
+  },
+
+  async createCommunityPost(data: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/community`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create post');
+    return await res.json();
+  },
+
+  async updateUserProfile(data: any): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update profile');
+    return await res.json();
+  },
+
+  async fetchAdminStats(): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/stats`);
+      if (!res.ok) throw new Error('Failed to fetch admin stats');
+      return await res.json();
+    } catch {
+      return { users: 0, trips: 0, posts: 0 };
+    }
+  },
 };

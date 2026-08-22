@@ -54,10 +54,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     Promise.all([
       api.fetchTrips(currentUserObj?.id || currentUserObj?.email),
+      api.fetchCommunityPosts(),
       mockApi.destinations.list(),
       mockApi.activities.list(),
-      mockApi.community.list(),
-    ]).then(([backendTrips, seedDestinations, seedActivities, seedPosts]) => {
+    ]).then(([backendTrips, backendPosts, seedDestinations, seedActivities]) => {
       let finalTrips: Trip[] = [];
       if (backendTrips && backendTrips.length > 0) {
         finalTrips = backendTrips.map((bt: any) => ({
@@ -134,11 +134,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeProfile = parsed.profile;
       }
 
+      const initialPosts: CommunityPost[] = backendPosts && backendPosts.length > 0 ? backendPosts : [
+        {
+          id: 'post-1',
+          user: 'Aarav Mehta',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+          destination: 'Kyoto, Japan',
+          tripName: 'Zen Temples & Gardens',
+          body: 'Morning light filtering through the Bamboo Grove in Arashiyama. Pure serenity before the crowds arrive.',
+          image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80',
+          likes: 38,
+          comments: 6,
+          createdAt: '2 hours ago',
+        }
+      ];
+
       setTrips(finalTrips);
       setDestinations(seedDestinations);
       setActivities(seedActivities);
       setProfile(activeProfile);
-      setPosts(seedPosts);
+      setPosts(initialPosts);
       setSelectedTripId(finalTrips[0]?.id ?? '');
     });
   }, []);
@@ -236,6 +251,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }));
       setTrips(formatted);
       setSelectedTripId(formatted[0]?.id ?? '');
+    },
+    []
+  );
+
+  const updateProfile = useCallback(
+    async (updated: UserProfile) => {
+      setProfile(updated);
+      try {
+        await api.updateUserProfile({
+          first_name: updated.firstName,
+          last_name: updated.lastName,
+          email: updated.email,
+          phone: updated.phone,
+          city: updated.city,
+          country: updated.country,
+          profile_photo: updated.avatar,
+        });
+      } catch (err) {
+        console.warn('Backend sync update profile warning:', err);
+      }
     },
     []
   );
@@ -445,18 +480,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const addPost = useCallback((postData: Omit<CommunityPost, 'id' | 'likes' | 'comments' | 'liked' | 'createdAt'>) => {
-    const newPost: CommunityPost = {
-      ...postData,
-      id: `post-${Date.now()}`,
-      likes: 0,
-      comments: 0,
-      liked: false,
-      createdAt: 'Just now',
-    };
-    setPosts((current) => [newPost, ...current]);
-    addToast('Your story has been published to the community!', 'success');
-  }, [addToast]);
+  const addPost = useCallback(
+    async (postData: Omit<CommunityPost, 'id' | 'likes' | 'comments' | 'liked' | 'createdAt'>) => {
+      const newPost: CommunityPost = {
+        ...postData,
+        id: `post-${Date.now()}`,
+        likes: 0,
+        comments: 0,
+        liked: false,
+        createdAt: 'Just now',
+      };
+      setPosts((current) => [newPost, ...current]);
+      addToast('Your story has been published to the community!', 'success');
+
+      try {
+        await api.createCommunityPost(newPost);
+      } catch (err) {
+        console.warn('Backend createCommunityPost warning:', err);
+      }
+    },
+    [addToast]
+  );
 
   const selectedTrip = useMemo(() => trips.find((trip) => trip.id === selectedTripId), [trips, selectedTripId]);
 
@@ -480,7 +524,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       moveStop,
       addActivity,
       removeActivity,
-      updateProfile: setProfile,
+      updateProfile,
       registerUser,
       loginUser,
       toggleLike,
@@ -508,6 +552,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       moveStop,
       addActivity,
       removeActivity,
+      updateProfile,
       registerUser,
       loginUser,
       toggleLike,

@@ -8,7 +8,7 @@ import secrets
 import base64
 import asyncio
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -22,6 +22,20 @@ JWT_SECRET = os.getenv("JWT_SECRET", "globetrotter_luxury_travel_sec_2026")
 # In-Memory Fast Memory Cache Fallback for instant responses
 MEM_USERS = {}
 MEM_TRIPS = []
+MEM_POSTS = [
+    {
+        "id": "post_seed",
+        "user": "Aarav Mehta",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+        "destination": "Kyoto, Japan",
+        "tripName": "Zen Gardens Explorer",
+        "body": "The golden pavilion was amazing at sunset! Highly recommend taking the path less traveled.",
+        "image": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80",
+        "likes": 42,
+        "comments": 8,
+        "createdAt": "1 hour ago"
+    }
+]
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
@@ -419,6 +433,66 @@ async def generate_ai_itinerary(req: AIGenerateRequest):
         ],
         "activities": activities,
         "is_public": False
+    }
+
+from fastapi import Request
+
+@app.get("/api/community")
+async def get_community_posts():
+    return MEM_POSTS
+
+@app.post("/api/community")
+async def create_community_post(request: Request):
+    data = await request.json()
+    post_id = f"post_{secrets.token_hex(6)}"
+    data["id"] = post_id
+    if "likes" not in data:
+        data["likes"] = 0
+    if "comments" not in data:
+        data["comments"] = 0
+    if "createdAt" not in data:
+        data["createdAt"] = "Just now"
+    MEM_POSTS.insert(0, data)
+    return data
+
+@app.put("/api/auth/profile")
+async def update_user_profile(request: Request):
+    data = await request.json()
+    email = data.get("email", "").lower()
+    if email in MEM_USERS:
+        MEM_USERS[email].update(data)
+        async def try_mongo_update():
+            try:
+                await asyncio.wait_for(users_collection.update_one({"email": email}, {"$set": data}), timeout=2.0)
+            except Exception:
+                pass
+        asyncio.create_task(try_mongo_update())
+        return MEM_USERS[email]
+    
+    # Check mongo just in case
+    try:
+        doc = await asyncio.wait_for(users_collection.find_one({"email": email}), timeout=2.0)
+        if doc:
+            MEM_USERS[email] = format_doc(doc)
+            MEM_USERS[email].update(data)
+            async def try_mongo_update():
+                try:
+                    await asyncio.wait_for(users_collection.update_one({"email": email}, {"$set": data}), timeout=2.0)
+                except Exception:
+                    pass
+            asyncio.create_task(try_mongo_update())
+            return MEM_USERS[email]
+    except Exception:
+        pass
+
+    raise HTTPException(status_code=404, detail="User not found")
+
+@app.get("/api/admin/stats")
+async def get_admin_stats():
+    return {
+        "users": len(MEM_USERS),
+        "trips": len(MEM_TRIPS),
+        "posts": len(MEM_POSTS)
     }
 
 # Static file serving
