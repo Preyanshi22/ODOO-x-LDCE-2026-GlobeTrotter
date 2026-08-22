@@ -92,6 +92,19 @@ export function TripBuilderPage() {
       </div>
     );
 
+  const handleFinishPlanning = () => {
+    if (!trip) return;
+
+    updateTrip({
+      ...trip,
+      sections: currentTripSections,
+    });
+
+    setSelectedTripId(trip.id);
+    addToast(`✦ Trip "${trip.name}" saved to My Trips with all activities & budget!`, 'success');
+    navigate('/trips');
+  };
+
   const handleAddSection = (e: React.FormEvent) => {
     e.preventDefault();
     if (!trip || !newSection.title) return;
@@ -146,8 +159,8 @@ export function TripBuilderPage() {
           >
             Share
           </Button>
-          <Button icon={<Check size={16} />} onClick={() => navigate(`/trips/${trip.id}/view`)}>
-            Finish planning
+          <Button icon={<Check size={16} />} onClick={handleFinishPlanning}>
+            Finish & Save to My Trips
           </Button>
         </div>
       </div>
@@ -157,9 +170,9 @@ export function TripBuilderPage() {
         <i />
         <span className="active"><b>02</b> Destinations & Sections</span>
         <i />
-        <span><b>03</b> Activities</span>
+        <span className="active"><b>03</b> Curated Activities</span>
         <i />
-        <span><b>04</b> Review</span>
+        <span><b>04</b> Review & Save</span>
       </div>
 
       {/* Screen 5: Section-Based Itinerary Builder */}
@@ -218,18 +231,20 @@ export function TripBuilderPage() {
           <div className="section-heading">
             <div>
               <p className="eyebrow">The journey</p>
-              <h2>Your stops</h2>
+              <h2>Route Stops & Daily Experiences</h2>
             </div>
-            <Button variant="secondary" icon={<Plus size={15} />} onClick={() => setModal('stop')}>
-              Add stop
+            <Button variant="secondary" icon={<Plus size={16} />} onClick={() => setModal('stop')}>
+              Add destination stop
             </Button>
           </div>
           {trip.stops.length === 0 ? (
-            <div className="card builder-empty">
-              <div className="empty-icon"><MapPin size={22} /></div>
-              <h3>Every great route starts somewhere.</h3>
-              <p>Choose your first city and begin connecting the dots.</p>
-              <Button onClick={() => setModal('stop')}>Add your first stop</Button>
+            <div className="card empty-stops">
+              <MapPin size={24} />
+              <h3>No route stops added yet</h3>
+              <p>Add your first city or country stop to start customizing daily activities and budgets.</p>
+              <Button icon={<Plus size={16} />} onClick={() => setModal('stop')}>
+                Add destination stop
+              </Button>
             </div>
           ) : (
             <div className="stops-list">
@@ -265,6 +280,61 @@ export function TripBuilderPage() {
             </div>
           </div>
         </aside>
+      </div>
+
+      {/* Bottom Save & Finish Planning Action Bar */}
+      <div
+        className="card"
+        style={{
+          marginTop: '32px',
+          marginBottom: '32px',
+          padding: '24px 32px',
+          borderRadius: '20px',
+          background: 'linear-gradient(135deg, var(--navy) 0%, #1e3a34 100%)',
+          color: '#ffffff',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
+        }}
+      >
+        <div>
+          <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--amber)', letterSpacing: '0.05em' }}>
+            ✦ Finalize Itinerary
+          </span>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: '4px 0 6px 0', color: '#ffffff' }}>
+            Finished Planning {trip.name}?
+          </h3>
+          <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)', margin: 0 }}>
+            Save this trip along with all curated activities, stops, and budget breakdown to your <strong>My Trips</strong> section.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Link
+            to={`/trips/${trip.id}/view`}
+            style={{
+              padding: '10px 18px',
+              borderRadius: '12px',
+              background: 'rgba(255,255,255,0.15)',
+              color: '#ffffff',
+              fontSize: '13px',
+              fontWeight: 600,
+              textDecoration: 'none'
+            }}
+          >
+            Preview Itinerary
+          </Link>
+          <Button
+            style={{ background: 'var(--amber)', color: '#ffffff', fontWeight: 700, padding: '10px 24px' }}
+            icon={<Check size={17} />}
+            onClick={handleFinishPlanning}
+          >
+            Finish & Save to My Trips
+          </Button>
+        </div>
       </div>
 
       {/* Add Section Modal */}
