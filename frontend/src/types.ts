@@ -1,5 +1,5 @@
 export type TripStatus = 'upcoming' | 'ongoing' | 'completed';
-export type ActivityCategory = 'Sightseeing' | 'Food' | 'Adventure' | 'Culture' | 'Shopping' | 'Nature' | 'Nightlife';
+export type ActivityCategory = 'Sightseeing' | 'Food' | 'Adventure' | 'Culture' | 'Shopping' | 'Nature' | 'Nightlife' | 'History' | 'Wellness';
 export type BudgetCategory = 'Transport' | 'Accommodation' | 'Activities' | 'Meals' | 'Other';
 
 export interface Destination {

@@ -89,8 +89,88 @@ export function CreateTripPage() {
     navigate(`/trips/${trip.id}/build`);
   };
 
-  // 6 Curated suggestion cards for places & activities
+  // 12 Expanded suggestion cards for places & activities (including Hawaii, Iceland, Maldives, etc.)
   const suggestions = [
+    {
+      id: 'sug-hawaii',
+      title: 'Honolulu (Hawaii)',
+      country: 'USA',
+      category: 'Beach & Adventure',
+      price: 12800,
+      popularity: 99,
+      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=85',
+      desc: 'Waikiki sunset helicopter tours, Diamond Head hikes, and private surfing.'
+    },
+    {
+      id: 'sug-iceland',
+      title: 'Reykjavik',
+      country: 'Iceland',
+      category: 'Nature & Spa',
+      price: 9500,
+      popularity: 96,
+      image: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=800&q=85',
+      desc: 'Blue Lagoon geothermal baths and guided night hunts for Northern Lights.'
+    },
+    {
+      id: 'sug-maldives',
+      title: 'Malé (Maldives)',
+      country: 'Maldives',
+      category: 'Luxury & Reefs',
+      price: 8900,
+      popularity: 98,
+      image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=800&q=85',
+      desc: 'Overwater bungalows, manta ray snorkeling, and sunset catamaran cruises.'
+    },
+    {
+      id: 'sug-thailand',
+      title: 'Phuket',
+      country: 'Thailand',
+      category: 'Beach & Food',
+      price: 4200,
+      popularity: 94,
+      image: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=85',
+      desc: 'Phi Phi island speedboats, Maya Bay beaches, and night markets.'
+    },
+    {
+      id: 'sug-egypt',
+      title: 'Cairo',
+      country: 'Egypt',
+      category: 'History & Nile',
+      price: 3800,
+      popularity: 93,
+      image: 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=800&q=85',
+      desc: 'Great Pyramids of Giza, Sphinx tours, and Nile felucca cruises.'
+    },
+    {
+      id: 'sug-nz',
+      title: 'Queenstown',
+      country: 'New Zealand',
+      category: 'Alpine Adventure',
+      price: 16800,
+      popularity: 95,
+      image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=800&q=85',
+      desc: 'Milford Sound fiord flights, glacier hikes, and mountain lake cruises.'
+    },
+    {
+      id: 'sug-peru',
+      title: 'Cusco (Machu Picchu)',
+      country: 'Peru',
+      category: 'History & Trail',
+      price: 7400,
+      popularity: 94,
+      image: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=800&q=85',
+      desc: 'Sacred Valley train journeys and Incan stone citadel expeditions.'
+    },
+    {
+      id: 'sug-norway',
+      title: 'Tromsø',
+      country: 'Norway',
+      category: 'Arctic & Sledding',
+      price: 9200,
+      popularity: 92,
+      image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=800&q=85',
+      desc: 'Arctic husky dog sledding, Sami campfire nights, and Aurora hunts.'
+    },
     {
       id: 'sug-1',
       title: 'Paris',
@@ -120,26 +200,6 @@ export function CreateTripPage() {
       popularity: 94,
       image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=85',
       desc: 'Swiss Alps glacier flights, alpine hiking, and mountain lakes.'
-    },
-    {
-      id: 'sug-4',
-      title: 'Dubai',
-      country: 'UAE',
-      category: 'Adventure',
-      price: 7900,
-      popularity: 92,
-      image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=85',
-      desc: 'Red dune desert safaris, camel trekking, and Bedouin camps.'
-    },
-    {
-      id: 'sug-5',
-      title: 'Rome',
-      country: 'Italy',
-      category: 'History',
-      price: 4800,
-      popularity: 95,
-      image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=85',
-      desc: 'Underground Colosseum night tours and Roman Forum strolls.'
     },
     {
       id: 'sug-6',
@@ -259,7 +319,21 @@ export function CreateTripPage() {
                   cover: found ? found.image : prev.cover
                 }));
               }}
-              options={['Choose destination...', 'Paris', 'Tokyo', 'Zurich', 'Dubai', 'Rome', 'Bali']}
+              options={[
+                'Choose destination...',
+                'Honolulu (Hawaii)',
+                'Reykjavik',
+                'Malé (Maldives)',
+                'Phuket',
+                'Cairo',
+                'Queenstown',
+                'Cusco (Machu Picchu)',
+                'Tromsø',
+                'Paris',
+                'Tokyo',
+                'Zurich',
+                'Bali'
+              ]}
               ariaLabel="Select a Place"
             />
           </div>

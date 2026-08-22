@@ -132,6 +132,116 @@ export const destinations: Destination[] = [
     popularity: 86,
     costIndex: 5,
     tags: ['Nature', 'Slow travel', 'Adventure']
+  },
+  {
+    id: 'hawaii',
+    city: 'Honolulu',
+    country: 'USA',
+    region: 'Americas',
+    description: 'Volcanic peaks, golden Waikiki beaches, tropical surf, and lush rainforest waterfalls.',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85',
+    popularity: 99,
+    costIndex: 4,
+    tags: ['Beach', 'Nature', 'Adventure']
+  },
+  {
+    id: 'iceland',
+    city: 'Reykjavik',
+    country: 'Iceland',
+    region: 'Europe',
+    description: 'Glowing Northern Lights, geothermal Blue Lagoon thermal waters, and dramatic waterfalls.',
+    image: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=900&q=85',
+    popularity: 96,
+    costIndex: 5,
+    tags: ['Nature', 'Adventure', 'Wellness']
+  },
+  {
+    id: 'phuket',
+    city: 'Phuket',
+    country: 'Thailand',
+    region: 'Asia',
+    description: 'Emerald Andaman limestone cliffs, white sand beaches, and vibrant floating night markets.',
+    image: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=900&q=85',
+    popularity: 94,
+    costIndex: 2,
+    tags: ['Beach', 'Food', 'Nightlife']
+  },
+  {
+    id: 'maldives',
+    city: 'Malé',
+    country: 'Maldives',
+    region: 'Asia',
+    description: 'Luxury overwater bungalows, crystal lagoon reefs, and serene coral island escapes.',
+    image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=900&q=85',
+    popularity: 98,
+    costIndex: 5,
+    tags: ['Luxury', 'Beach', 'Romance']
+  },
+  {
+    id: 'cairo',
+    city: 'Cairo',
+    country: 'Egypt',
+    region: 'Africa',
+    description: 'The legendary Great Pyramids of Giza, Sphinx monuments, and ancient Nile river feluccas.',
+    image: 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=900&q=85',
+    popularity: 93,
+    costIndex: 2,
+    tags: ['History', 'Culture', 'Sightseeing']
+  },
+  {
+    id: 'queenstown',
+    city: 'Queenstown',
+    country: 'New Zealand',
+    region: 'Oceania',
+    description: 'Stunning alpine fiords, glacier hikes, bungee adventures, and crystal clear lakes.',
+    image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=900&q=85',
+    popularity: 95,
+    costIndex: 4,
+    tags: ['Adventure', 'Nature', 'Views']
+  },
+  {
+    id: 'cusco',
+    city: 'Cusco',
+    country: 'Peru',
+    region: 'Americas',
+    description: 'Gateway to Machu Picchu, historic Incan stone ruins, and Andean mountain vistas.',
+    image: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=900&q=85',
+    popularity: 94,
+    costIndex: 3,
+    tags: ['History', 'Adventure', 'Culture']
+  },
+  {
+    id: 'tromso',
+    city: 'Tromsø',
+    country: 'Norway',
+    region: 'Europe',
+    description: 'Arctic wilderness, Aurora Borealis hunts, husky dog sledding, and fjord cruises.',
+    image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=900&q=85',
+    popularity: 92,
+    costIndex: 4,
+    tags: ['Nature', 'Adventure', 'Views']
+  },
+  {
+    id: 'marrakech',
+    city: 'Marrakech',
+    country: 'Morocco',
+    region: 'Africa',
+    description: 'Aromatic spice souks, terracotta riads, traditional hammam spas, and desert oasis tours.',
+    image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=900&q=85',
+    popularity: 91,
+    costIndex: 2,
+    tags: ['Culture', 'Food', 'Shopping']
+  },
+  {
+    id: 'banff',
+    city: 'Banff',
+    country: 'Canada',
+    region: 'Americas',
+    description: 'Turquoise glacier lakes Lake Louise & Moraine Lake surrounded by Rocky Mountain peaks.',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=900&q=85',
+    popularity: 96,
+    costIndex: 4,
+    tags: ['Nature', 'Adventure', 'Slow travel']
   }
 ];
 
@@ -254,6 +364,126 @@ export const activities: Activity[] = [
     price: 3700,
     description: 'Participate in an authentic matcha preparation in a historic 150-year-old wooden machiya.',
     image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=85',
+    rating: 4.9
+  },
+  {
+    id: 'hawaii-surf',
+    name: 'Waikiki Sunset Helicopter & Surf Experience',
+    city: 'Honolulu',
+    country: 'USA',
+    category: 'Adventure',
+    duration: '4 hours',
+    price: 12800,
+    description: 'Fly over Diamond Head crater and take a private surf lesson along iconic Waikiki Beach.',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=85',
+    rating: 4.9
+  },
+  {
+    id: 'iceland-spa',
+    name: 'Blue Lagoon Spa & Northern Lights Hunt',
+    city: 'Reykjavik',
+    country: 'Iceland',
+    category: 'Nature',
+    duration: '5 hours',
+    price: 9500,
+    description: 'Soak in warm geothermal silica waters followed by a guided night hunt for the Aurora Borealis.',
+    image: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=800&q=85',
+    rating: 4.9
+  },
+  {
+    id: 'phuket-island',
+    name: 'Phi Phi & Maya Bay Speedboat Tour',
+    city: 'Phuket',
+    country: 'Thailand',
+    category: 'Adventure',
+    duration: '7 hours',
+    price: 4200,
+    description: 'Cruise past limestone karst islands, snorkel in turquoise bays, and visit Maya Bay beach.',
+    image: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=85',
+    rating: 4.8
+  },
+  {
+    id: 'maldives-cruise',
+    name: 'Overwater Sunset Cruise & Reef Snorkeling',
+    city: 'Malé',
+    country: 'Maldives',
+    category: 'Nature',
+    duration: '3.5 hours',
+    price: 8900,
+    description: 'Snorkel with manta rays and enjoy fresh tropical fruit mocktails on a luxury catamaran at sunset.',
+    image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=800&q=85',
+    rating: 5.0
+  },
+  {
+    id: 'cairo-pyramids',
+    name: 'Giza Pyramids & Nile Felucca Sunset Cruise',
+    city: 'Cairo',
+    country: 'Egypt',
+    category: 'History',
+    duration: '5 hours',
+    price: 3800,
+    description: 'Guided walk around the Great Pyramids & Sphinx followed by a relaxing Nile sailboat trip.',
+    image: 'https://images.unsplash.com/photo-1503177119275-0aa32b3a9368?auto=format&fit=crop&w=800&q=85',
+    rating: 4.8
+  },
+  {
+    id: 'nz-milford',
+    name: 'Milford Sound Fiord Helicopter & Boat Tour',
+    city: 'Queenstown',
+    country: 'New Zealand',
+    category: 'Adventure',
+    duration: '6 hours',
+    price: 16800,
+    description: 'Scenic mountain flight past alpine waterfalls followed by a close-up boat cruise along the fiord.',
+    image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=800&q=85',
+    rating: 5.0
+  },
+  {
+    id: 'peru-machu',
+    name: 'Machu Picchu Sacred Citadel Sunset Expedition',
+    city: 'Cusco',
+    country: 'Peru',
+    category: 'History',
+    duration: '8 hours',
+    price: 7400,
+    description: 'Train journey through the Sacred Valley and guided sunset exploration of ancient Incan stone citadel.',
+    image: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=800&q=85',
+    rating: 4.9
+  },
+  {
+    id: 'tromso-husky',
+    name: 'Arctic Husky Dog Sledding & Campfire Night',
+    city: 'Tromsø',
+    country: 'Norway',
+    category: 'Adventure',
+    duration: '4 hours',
+    price: 9200,
+    description: 'Drive your own husky sled across snow covered Arctic wilderness and warm up by a traditional Sami lavvu fire.',
+    image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=800&q=85',
+    rating: 4.9
+  },
+  {
+    id: 'morocco-souk',
+    name: 'Marrakech Medina Food Tour & Hammam Spa',
+    city: 'Marrakech',
+    country: 'Morocco',
+    category: 'Culture',
+    duration: '4 hours',
+    price: 3400,
+    description: 'Taste authentic tagines and pastries in Medina souks followed by a soothing eucalyptus hammam bath.',
+    image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=800&q=85',
+    rating: 4.8
+  },
+  {
+    id: 'canada-banff',
+    name: 'Lake Louise & Moraine Lake Canoe Expedition',
+    city: 'Banff',
+    country: 'Canada',
+    category: 'Nature',
+    duration: '3.5 hours',
+    price: 6200,
+    description: 'Paddle classic red canoes across vivid turquoise glacier waters surrounded by Canadian Rocky Mountain peaks.',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=85',
     rating: 4.9
   }
 ];
