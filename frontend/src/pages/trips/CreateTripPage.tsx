@@ -234,7 +234,7 @@ export function CreateTripPage() {
       {/* Screen 4 Header */}
       <div style={{ marginBottom: '24px' }}>
         <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '12px' }}>
-          Create a new Trip (Screen 4)
+          Plan a New Trip
         </span>
         <h1
           style={{

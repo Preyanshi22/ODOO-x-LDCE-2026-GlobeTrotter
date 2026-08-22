@@ -89,7 +89,7 @@ export function RegisterPage() {
         }}
       >
         <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '11px' }}>
-          Registration Screen (Screen 2)
+          Create Account
         </span>
         <h1
           style={{
@@ -299,7 +299,7 @@ export function RegisterPage() {
           <p className="auth-switch" style={{ margin: 0, fontSize: '13px', color: 'var(--ink-muted)' }}>
             Already have an account?{' '}
             <Link to="/login" style={{ color: 'var(--amber-dark)', fontWeight: 700 }}>
-              Sign In (Screen 1)
+              Sign In
             </Link>
           </p>
         </div>

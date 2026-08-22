@@ -121,7 +121,7 @@ export function TripBuilderPage() {
 
       <div className="builder-hero">
         <div>
-          <span className="eyebrow">Build Itinerary Screen (Screen 5)</span>
+          <span className="eyebrow">Itinerary Builder</span>
           <h1>{trip.name}</h1>
           <p>{trip.description}</p>
           <div className="builder-meta">
@@ -161,7 +161,7 @@ export function TripBuilderPage() {
       <section style={{ marginBottom: '32px' }}>
         <div className="section-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div>
-            <p className="eyebrow">Screen 5 Requirement</p>
+            <p className="eyebrow">Section-Based Builder</p>
             <h2>Itinerary Sections & Budget Breakdown</h2>
           </div>
           <Button variant="secondary" icon={<Plus size={15} />} onClick={() => setModal('section')}>

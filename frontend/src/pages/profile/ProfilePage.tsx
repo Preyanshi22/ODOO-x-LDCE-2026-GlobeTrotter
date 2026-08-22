@@ -73,7 +73,7 @@ export function ProfilePage() {
       <div className="page-heading-row" style={{ marginBottom: '18px', marginTop: '0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '12px' }}>
-            User Profile Pages (Screen 7)
+            Personal Profile
           </span>
           <h1 style={{ fontSize: '32px', fontWeight: 600, color: 'var(--navy)', margin: '4px 0 8px', fontFamily: "'Fraunces', Georgia, serif" }}>
             GlobalTrotter Profile

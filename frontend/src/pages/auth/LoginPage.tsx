@@ -52,7 +52,7 @@ export function LoginPage() {
         }}
       >
         <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '11px' }}>
-          Login Screen (Screen 1)
+          Welcome Back
         </span>
         <h1
           style={{
@@ -151,7 +151,7 @@ export function LoginPage() {
               loading={loading}
               style={{ width: '100%', borderRadius: '12px', padding: '12px', justifyContent: 'center' }}
             >
-              {loading ? 'Signing in...' : 'Login Button'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </div>
         </form>
@@ -160,7 +160,7 @@ export function LoginPage() {
           <p className="auth-switch" style={{ margin: '0 0 12px', fontSize: '13px', color: 'var(--ink-muted)' }}>
             New to GlobeTrotter?{' '}
             <Link to="/register" style={{ color: 'var(--amber-dark)', fontWeight: 700 }}>
-              Registration Screen (Screen 2)
+              Create an account
             </Link>
           </p>
           <p className="secure-note" style={{ margin: 0, fontSize: '11px', color: 'var(--ink-faint)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>

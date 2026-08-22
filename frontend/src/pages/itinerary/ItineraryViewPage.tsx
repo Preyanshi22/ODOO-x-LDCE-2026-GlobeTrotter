@@ -200,7 +200,7 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
       {/* Screen 9 Title Banner */}
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
         <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '12px' }}>
-          Itinerary View Screen with budget section (Screen 9)
+          Itinerary & Budget Breakdown
         </span>
         <h1
           style={{
@@ -469,7 +469,7 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
               </button>
             </div>
             <p style={{ fontSize: '0.9rem', color: '#6b7280', marginBottom: '16px' }}>
-              Anyone with this link can view your Screen 9 itinerary and expense details.
+              Anyone with this link can view your itinerary and expense details.
             </p>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
               <input

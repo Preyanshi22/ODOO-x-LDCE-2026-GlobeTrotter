@@ -35,7 +35,7 @@ export function TripsPage() {
     <div className="trips-page">
       <div className="page-heading-row">
         <div>
-          <p className="eyebrow">User Trip Listing (Screen 6)</p>
+          <p className="eyebrow">My Trips Overview</p>
           <h1>My trips</h1>
           <p className="lede">Categorized by Ongoing, Up-coming, and Completed status.</p>
         </div>
