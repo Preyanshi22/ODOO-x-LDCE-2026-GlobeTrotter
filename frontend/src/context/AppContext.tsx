@@ -30,6 +30,7 @@ interface AppContextValue {
   addToast: (message: string, tone?: ToastMessage['tone']) => void;
   toasts: ToastMessage[];
   dismissToast: (id: string) => void;
+  clearAllUserData: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -55,9 +56,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       api.fetchTrips(currentUserObj?.id || currentUserObj?.email),
       mockApi.destinations.list(),
       mockApi.activities.list(),
-      mockApi.profile.get(),
       mockApi.community.list(),
-    ]).then(([backendTrips, seedDestinations, seedActivities, seedProfile, seedPosts]) => {
+    ]).then(([backendTrips, seedDestinations, seedActivities, seedPosts]) => {
       let finalTrips: Trip[] = [];
       if (backendTrips && backendTrips.length > 0) {
         finalTrips = backendTrips.map((bt: any) => ({
@@ -104,19 +104,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
       }
 
-      const seedTripsFallback = parsed?.trips && parsed.trips.length > 0 ? parsed.trips : [];
-      const combinedTrips = finalTrips.length > 0 ? finalTrips : seedTripsFallback.length > 0 ? seedTripsFallback : [];
+      let activeProfile: UserProfile = {
+        firstName: 'Guest',
+        lastName: 'User',
+        email: 'guest@globetrotter.app',
+        phone: '',
+        city: 'Explore',
+        country: 'World',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        language: 'English (US)',
+        savedDestinations: [],
+        privacy: 'public',
+      };
 
-      let activeProfile = seedProfile;
       if (currentUserObj) {
         activeProfile = {
-          firstName: currentUserObj.first_name || currentUserObj.firstName || 'Aarav',
-          lastName: currentUserObj.last_name || currentUserObj.lastName || 'Mehta',
-          email: currentUserObj.email || 'aarav@globetrotter.app',
-          phone: currentUserObj.phone || '+91 98765 43210',
-          city: currentUserObj.city || 'Bengaluru',
-          country: currentUserObj.country || 'India',
-          avatar: currentUserObj.profile_photo || seedProfile.avatar,
+          firstName: currentUserObj.first_name || currentUserObj.firstName || 'User',
+          lastName: currentUserObj.last_name || currentUserObj.lastName || '',
+          email: currentUserObj.email || '',
+          phone: currentUserObj.phone || '',
+          city: currentUserObj.city || '',
+          country: currentUserObj.country || '',
+          avatar: currentUserObj.profile_photo || activeProfile.avatar,
           language: 'English (US)',
           savedDestinations: [],
           privacy: 'public',
@@ -125,12 +134,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeProfile = parsed.profile;
       }
 
-      setTrips(combinedTrips);
+      setTrips(finalTrips);
       setDestinations(seedDestinations);
       setActivities(seedActivities);
       setProfile(activeProfile);
       setPosts(seedPosts);
-      setSelectedTripId(parsed?.selectedTripId ?? (combinedTrips[0]?.id ?? ''));
+      setSelectedTripId(finalTrips[0]?.id ?? '');
     });
   }, []);
 
@@ -146,6 +155,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismissToast = useCallback((id: string) => setToasts((current) => current.filter((toast) => toast.id !== id)), []);
+
+  const clearAllUserData = useCallback(() => {
+    setTrips([]);
+    window.localStorage.removeItem(STORAGE);
+    window.localStorage.removeItem(USER_STORAGE);
+    sessionStorage.clear();
+    setProfile({
+      firstName: 'Guest',
+      lastName: 'User',
+      email: 'guest@globetrotter.app',
+      phone: '',
+      city: 'Explore',
+      country: 'World',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      language: 'English (US)',
+      savedDestinations: [],
+      privacy: 'public',
+    });
+    addToast('All mock data cleared.', 'info');
+  }, [addToast]);
 
   const registerUser = useCallback(
     async (data: UserRegisterData) => {
@@ -164,6 +193,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         privacy: 'public',
       };
       setProfile(newProfile);
+      setTrips([]);
       window.localStorage.setItem(USER_STORAGE, JSON.stringify(u));
     },
     []
@@ -189,24 +219,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(USER_STORAGE, JSON.stringify(u));
 
       const userTrips = await api.fetchTrips(u.id || u.email);
-      if (userTrips && userTrips.length > 0) {
-        const formatted: Trip[] = userTrips.map((bt: any) => ({
-          id: bt.id || String(bt._id),
-          name: bt.title || bt.name || 'Untitled Trip',
-          description: bt.description || 'Custom Travel Itinerary',
-          startDate: bt.start_date || '2026-09-01',
-          endDate: bt.end_date || '2026-09-05',
-          cover: bt.cover || 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85',
-          status: 'upcoming' as TripStatus,
-          createdAt: new Date().toISOString(),
-          budget: {
-            total: bt.total_budget || 50000,
-            categories: { Transport: 10000, Accommodation: 20000, Activities: 10000, Meals: 7500, Other: 2500 },
-          },
-          stops: [],
-        }));
-        setTrips(formatted);
-      }
+      const formatted: Trip[] = (userTrips || []).map((bt: any) => ({
+        id: bt.id || String(bt._id),
+        name: bt.title || bt.name || 'Untitled Trip',
+        description: bt.description || 'Custom Travel Itinerary',
+        startDate: bt.start_date || '2026-09-01',
+        endDate: bt.end_date || '2026-09-05',
+        cover: bt.cover || 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85',
+        status: 'upcoming' as TripStatus,
+        createdAt: new Date().toISOString(),
+        budget: {
+          total: bt.total_budget || 50000,
+          categories: { Transport: 10000, Accommodation: 20000, Activities: 10000, Meals: 7500, Other: 2500 },
+        },
+        stops: [],
+      }));
+      setTrips(formatted);
+      setSelectedTripId(formatted[0]?.id ?? '');
     },
     []
   );
@@ -233,7 +262,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let createdId = `trip-${Date.now()}`;
       const savedUserStr = window.localStorage.getItem(USER_STORAGE);
       const currentUser = savedUserStr ? JSON.parse(savedUserStr) : null;
-      const user_id = currentUser?.id || profile?.email || 'demo_user';
+      const user_id = currentUser?.id || profile?.email || 'user_guest';
 
       try {
         const backendRes = await api.createTrip({
@@ -459,6 +488,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addToast,
       toasts,
       dismissToast,
+      clearAllUserData,
     }),
     [
       trips,
@@ -485,6 +515,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addToast,
       toasts,
       dismissToast,
+      clearAllUserData,
     ]
   );
 
