@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Journey - GlobeTrotter</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1>GlobeTrotter</h1>
+                <p>Travel Reimagined</p>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Journeys</a></li>
+                    <li><a href="#">Destinations</a></li>
+                    <li><a href="#">Collections</a></li>
+                </ul>
+            </nav>
+            <div class="user-actions">
+                <button class="btn btn-outline">Profile</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <!-- Create Journey Form -->
+            <section class="create-journey-page">
+                <!-- Editorial Intro -->
+                <div class="editorial-intro">
+                    <span class="editorial-label">NEW JOURNEY</span>
+                    <h1 class="dashboard-heading">Where will you go next?</h1>
+                    <p class="dashboard-subtext">
+                        Start with the essentials. You can shape the details of your journey next.
+                    </p>
+                </div>
+
+                <!-- Journey Form -->
+                <form id="create-journey-form" class="journey-form">
+                    <!-- Journey Details -->
+                    <div class="form-group">
+                        <label for="journey-name" class="form-label">Journey Name</label>
+                        <input type="text" id="journey-name" name="journey-name" placeholder="Give your journey a name" required>
+                    </div>
+
+                    <!-- Destination -->
+                    <div class="form-group">
+                        <label for="destination" class="form-label">Destination</label>
+                        <input type="text" id="destination" name="destination" placeholder="Enter your primary destination" required>
+                    </div>
+
+                    <!-- Dates -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="departure-date" class="form-label">Departure</label>
+                            <input type="date" id="departure-date" name="departure-date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="return-date" class="form-label">Return</label>
+                            <input type="date" id="return-date" name="return-date" required>
+                        </div>
+                    </div>
+
+                    <div id="duration-display" class="duration-display">
+                        <!-- Duration will be shown here -->
+                    </div>
+
+                    <!-- Budget -->
+                    <div class="form-group">
+                        <label for="budget" class="form-label">Estimated Budget</label>
+                        <div class="budget-input-wrapper">
+                            <input type="number" id="budget" name="budget" placeholder="0" min="0" required>
+                            <span class="currency-symbol">₹</span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" name="description" rows="4" placeholder="Tell us a little about this journey..."></textarea>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <a href="index.html" class="btn btn-outline">BACK TO JOURNEYS</a>
+                        <button type="submit" class="btn btn-primary">CREATE JOURNEY</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 GlobeTrotter. All rights reserved.</p>
+            <div class="luxury-divider"></div>
+            <p class="text-center" style="font-size: 0.75rem; color: #999; margin-top: 1.5rem;">
+                A luxury travel experience platform
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('create-journey-form');
+            const durationDisplay = document.getElementById('duration-display');
+            const departureInput = document.getElementById('departure-date');
+            const returnInput = document.getElementById('return-date');
+
+            // Update duration display when dates change
+            const updateDuration = () => {
+                const departureDate = new Date(departureInput.value);
+                const returnDate = new Date(returnInput.value);
+
+                if (departureDate && returnDate && !isNaN(departureDate) && !isNaN(returnDate)) {
+                    const timeDiff = returnDate.getTime() - departureDate.getTime();
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+                    if (daysDiff >= 0) {
+                        durationDisplay.innerHTML = `
+                            <span class="duration-label">TRIP DURATION</span>
+                            <span class="duration-value">${daysDiff} ${daysDiff === 1 ? 'DAY' : 'DAYS'}</span>
+                        `;
+                    } else {
+                        durationDisplay.innerHTML = `
+                            <span class="duration-label">TRIP DURATION</span>
+                            <span class="duration-value error">INVALID DATES</span>
+                        `;
+                    }
+                } else {
+                    durationDisplay.innerHTML = '';
+                }
+            };
+
+            // Add event listeners for date inputs
+            departureInput.addEventListener('change', updateDuration);
+            returnInput.addEventListener('change', updateDuration);
+
+            // Form submission
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                // Get form values
+                const journeyName = document.getElementById('journey-name').value.trim();
+                const destination = document.getElementById('destination').value.trim();
+                const departureDate = new Date(document.getElementById('departure-date').value);
+                const returnDate = new Date(document.getElementById('return-date').value);
+                const budget = parseFloat(document.getElementById('budget').value);
+                const description = document.getElementById('description').value.trim();
+
+                // Basic validation
+                if (!journeyName) {
+                    alert('Enter a name for your journey.');
+                    return;
+                }
+
+                if (!destination) {
+                    alert('Choose a destination for your journey.');
+                    return;
+                }
+
+                if (isNaN(departureDate.getTime())) {
+                    alert('Select a valid departure date.');
+                    return;
+                }
+
+                if (isNaN(returnDate.getTime())) {
+                    alert('Select a valid return date.');
+                    return;
+                }
+
+                if (returnDate < departureDate) {
+                    alert('Choose a return date after your departure.');
+                    return;
+                }
+
+                if (isNaN(budget) || budget < 0) {
+                    alert('Enter a valid budget amount.');
+                    return;
+                }
+
+                // Calculate duration
+                const duration = Math.ceil((returnDate - departureDate) / (1000 * 3600 * 24)) + 1;
+
+                // Create new journey object
+                const newJourney = {
+                    id: Date.now(), // Simple ID generation
+                    name: journeyName,
+                    destinations: [destination], // Array for future multi-city support
+                    startDate: departureDate,
+                    endDate: returnDate,
+                    duration: duration,
+                    budget: budget,
+                    budgetCurrency: "₹",
+                    status: "planning", // New journeys start as planning
+                    description: description || "",
+                    image: "assets/images/Swiss Alps Majesty.png" // Default image
+                };
+
+                // Save journey using existing data flow
+                const journeys = window.GlobeTrotter.Journeys.getAll();
+                journeys.push(newJourney);
+                window.GlobeTrotter.Journeys.save(journeys);
+
+                // Show success feedback
+                const submitButton = form.querySelector('.btn-primary');
+                const originalText = submitButton.textContent;
+                submitButton.textContent = 'Journey Created!';
+                submitButton.style.backgroundColor = 'var(--color-black)';
+                submitButton.style.color = 'var(--color-white)';
+
+                // Navigate back to journeys after a brief delay
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>

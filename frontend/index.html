@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobeTrotter - Journeys</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1>GlobeTrotter</h1>
+                <p>Travel Reimagined</p>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" class="active">Journeys</a></li>
+                    <li><a href="#">Destinations</a></li>
+                    <li><a href="#">Collections</a></li>
+                </ul>
+            </nav>
+            <div class="user-actions">
+                <a href="create-journey.html" class="btn btn-primary">Create Journey</a>
+                <button class="btn btn-outline">Profile</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <!-- Landing Hero Image with Text Overlay -->
+            <section class="landing-hero">
+                <img src="assets/images/Swiss Alps Majesty.png" alt="Swiss Alps majestic view" loading="lazy">
+                <div class="landing-hero-content">
+                    <h1 class="landing-heading">Journeys Worth Remembering</h1>
+                    <p class="landing-subtext">Your collection of planned, upcoming, and completed travels</p>
+                </div>
+            </section>
+
+            <!-- Journeys Dashboard Content -->
+            <section class="journeys-dashboard">
+                <!-- Editorial Intro -->
+                <div class="editorial-intro">
+                    <span class="editorial-label">YOUR JOURNEYS</span>
+                    <h1 class="dashboard-heading">Journeys Worth Remembering</h1>
+                    <p class="dashboard-subtext">Your collection of planned, upcoming, and completed travels</p>
+                </div>
+
+                <!-- Featured Journey (will be populated by JS) -->
+                <div class="featured-journey" id="featured-journey">
+                    <!-- Content will be injected by JavaScript -->
+                </div>
+
+                <!-- My Journeys Section -->
+                <section class="my-journeys-section">
+                    <h2 class="section-heading">My Journeys</h2>
+                    <div class="journeys-grid" id="journeys-grid">
+                        <!-- Journey cards will be injected by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Create Journey CTA -->
+                <div class="create-journey-cta">
+                    <span class="cta-label">PLAN SOMETHING NEW</span>
+                    <h2 class="cta-heading">Your next extraordinary journey begins here.</h2>
+                    <a href="create-journey.html" class="btn btn-primary btn-large">CREATE JOURNEY →</a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 GlobeTrotter. All rights reserved.</p>
+            <div class="luxury-divider"></div>
+            <p class="text-center" style="font-size: 0.75rem; color: #999; margin-top: 1.5rem;">
+                A luxury travel experience platform
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

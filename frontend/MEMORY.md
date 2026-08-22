@@ -1,0 +1,1 @@
+- [Budget Breakdown Screen Completed](../../.claude/projects/c--Users-patel-OneDrive-Desktop-another/memory/budget-breakdown.md) — Added the Budget Breakdown screen to visualize trip expenses, budget status, and insights.

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerary Builder - GlobeTrotter</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1>GlobeTrotter</h1>
+                <p>Travel Reimagined</p>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Journeys</a></li>
+                    <li><a href="#">Destinations</a></li>
+                    <li><a href="#">Collections</a></li>
+                </ul>
+            </nav>
+            <div class="user-actions">
+                <button class="btn btn-outline">Profile</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <!-- Itinerary Builder -->
+            <section class="itinerary-builder">
+                <!-- Journey Header -->
+                <div class="journey-header">
+                    <div class="journey-info">
+                        <h1 class="journey-name">Japanese Odyssey</h1>
+                        <div class="journey-meta">
+                            <span class="journey-dates">Tokyo · Kyoto · Osaka</span>
+                            <span class="journey-duration">18 AUG — 25 AUG • 7 DAYS</span>
+                        </div>
+                    </div>
+                    <a href="#" class="btn btn-outline btn-sm">EDIT JOURNEY</a>
+                </div>
+
+                <!-- Trip Summary -->
+                <div class="trip-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">TOTAL BUDGET</span>
+                        <span class="summary-value">₹80,000</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">ESTIMATED COST</span>
+                        <span class="summary-value" id="estimated-cost">₹0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">REMAINING</span>
+                        <span class="summary-value" id="remaining-budget">₹80,000</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">CITIES</span>
+                        <span class="summary-value" id="city-count">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">ACTIVITIES</span>
+                        <span class="summary-value" id="activity-count">0</span>
+                    </div>
+                </div>
+
+                <!-- Main Itinerary -->
+                <div class="main-itinerary">
+                    <!-- Itinerary Content -->
+                    <div class="itinerary-content">
+                        <!-- City Sections Will Go Here -->
+                        <div id="itinerary-container">
+                            <!-- City sections will be dynamically inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <aside class="itinerary-sidebar">
+                        <div class="sidebar-section">
+                            <h3 class="sidebar-heading">ADD CITY</h3>
+                            <button class="btn btn-primary btn-block" id="add-city-btn">+ ADD CITY</button>
+                        </div>
+
+                        <div class="sidebar-section">
+                            <h3 class="sidebar-heading">VIEW ITINERARY</h3>
+                            <a href="#" class="btn btn-outline btn-block" id="view-itinerary-btn">VIEW ITINERARY →</a>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 GlobeTrotter. All rights reserved.</p>
+            <div class="luxury-divider"></div>
+            <p class="text-center" style="font-size: 0.75rem; color: #999; margin-top: 1.5rem;">
+                A luxury travel experience platform
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Activity Catalog
+        const ActivityCatalog = {
+            tokyo: [
+                { name: "Tokyo Tower", category: "Sightseeing", estimatedCost: 1200, duration: 2 },
+                { name: "Senso-ji Temple", category: "Sightseeing", estimatedCost: 0, duration: 2 },
+                { name: "Shibuya Crossing", category: "Sightseeing", estimatedCost: 0, duration: 1.5 },
+                { name: "Meiji Shrine", category: "Sightseeing", estimatedCost: 0, duration: 1.5 },
+                { name: "Tsukiji Fish Market", category: "Food", estimatedCost: 800, duration: 2 },
+                { name: "Harajuku Takeshita Street", category: "Shopping", estimatedCost: 0, duration: 2 },
+                { name: "Shinjuku Gyoen National Garden", category: "Sightseeing", estimatedCost: 500, duration: 2 },
+                { name: "Akihabara Electric Town", category: "Sightseeing", estimatedCost: 0, duration: 2 },
+                { name: "Lunch at Local Restaurant", category: "Food", estimatedCost: 1000, duration: 1 },
+                { name: "Dinner at Izakaya", category: "Food", estimatedCost: 1500, duration: 2 }
+            ],
+            kyoto: [
+                { name: "Fushimi Inari Shrine", category: "Sightseeing", estimatedCost: 0, duration: 2 },
+                { name: "Kinkaku-ji (Golden Pavilion)", category: "Sightseeing", estimatedCost: 400, duration: 1.5 },
+                { name: "Arashiyama Bamboo Grove", category: "Sightseeing", estimatedCost: 0, duration: 2 },
+                { name: "Kiyomizu-dera Temple", category: "Sightseeing", estimatedCost: 400, duration: 1.5 },
+                { name: "Gion District", category: "Sightseeing", estimatedCost: 0, duration: 2 },
+                { name: "Nijo Castle", category: "Sightseeing", estimatedCost: 600, duration: 2 },
+                { name: "Lunch at Traditional Restaurant", category: "Food", estimatedCost: 1200, duration: 1 },
+                { name: "Dinner with Geisha Show", category: "Food", estimatedCost: 3000, duration: 2.5 }
+            ],
+            osaka: [
+                { name: "Osaka Castle", category: "Sightseeing", estimatedCost: 600, duration: 2 },
+                { name: "Dotonbori", category: "Sightseeing", estimatedCost: 0, duration: 2 },
+                { name: "Kuromon Ichiba Market", category: "Food", estimatedCost: 800, duration: 1.5 },
+                { name: "Universal Studios Japan", category: "Entertainment", estimatedCost: 8000, duration: 8 },
+                { name: "Umeda Sky Building", category: "Sightseeing", estimatedCost: 1000, duration: 1.5 },
+                { name: "Lunch at Ramen Shop", category: "Food", estimatedCost: 800, duration: 1 },
+                { name: "Dinner at Kushikatsu Restaurant", category: "Food", estimatedCost: 1200, duration: 2 }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get journey ID from URL or use first journey for demo
+            const urlParams = new URLSearchParams(window.location.search);
+            const journeyId = parseInt(urlParams.get('id')) || 1;
+
+            // Get journey data
+            const journeys = window.GlobeTrotter.Journeys.getAll();
+            const journey = journeys.find(j => j.id === journeyId) || journeys[0];
+
+            if (!journey) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Initialize journey with itinerary structure if not present
+            if (!journey.stops) {
+                journey.stops = initializeStopsFromJourney(journey);
+                window.GlobeTrotter.Journeys.save(journeys);
+            }
+
+            // Bind events and render
+            bindEvents(journey);
+            renderItinerary(journey);
+            updateTripSummary(journey);
+        });
+
+        function initializeStopsFromJourney(journey) {
+            // Convert destinations array to stops structure
+            const stops = [];
+            const daysPerStop = Math.max(1, Math.floor(journey.duration / journey.destinations.length));
+
+            let currentDate = new Date(journey.startDate);
+
+            journey.destinations.forEach((destination, index) => {
+                const stopDate = new Date(currentDate);
+                const endDate = new Date(currentDate);
+                endDate.setDate(endDate.getDate() + daysPerStop - 1);
+
+                stops.push({
+                    id: Date.now() + index,
+                    city: destination,
+                    country: getCountryForCity(destination),
+                    startDate: stopDate,
+                    endDate: endDate,
+                    activities: []
+                });
+
+                currentDate.setDate(currentDate.getDate() + daysPerStop);
+            });
+
+            // Adjust last stop to match journey end date
+            if (stops.length > 0) {
+                stops[stops.length - 1].endDate = new Date(journey.endDate);
+            }
+
+            return stops;
+        }
+
+        function getCountryForCity(city) {
+            const cityCountryMap = {
+                "Tokyo": "Japan",
+                "Kyoto": "Japan",
+                "Osaka": "Japan",
+                "Paris": "France",
+                "Swiss Alps": "Switzerland",
+                "Prague": "Czech Republic",
+                "Santorini": "Greece",
+                "Amalfi Coast": "Italy",
+                "Barcelona": "Spain",
+                "Zermatt": "Switzerland",
+                "Interlaken": "Switzerland",
+                "Jungfrau Region": "Switzerland"
+            };
+
+            return cityCountryMap[city] || "";
+        }
+
+        function bindEvents(journey) {
+            // Add City Button
+            const addCityBtn = document.getElementById('add-city-btn');
+            if (addCityBtn) {
+                addCityBtn.addEventListener('click', () => {
+                    addNewCity(journey);
+                });
+            }
+
+            // View Itinerary Button
+            const viewItineraryBtn = document.getElementById('view-itinerary-btn');
+            if (viewItineraryBtn) {
+                viewItineraryBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const journeyId = urlParams.get('id') || 1; // Get journey ID from URL or default to 1
+                    window.location.href = `itinerary-view.html?id=${journeyId}`;
+                });
+            }
+        }
+
+        function addNewCity(journey) {
+            // Simple prompt for city name - in future would use a modal/select
+            const cityName = prompt("Enter city name for your new stop:", "");
+            if (!cityName || cityName.trim() === "") return;
+
+            const trimmedCity = cityName.trim();
+
+            // Add new stop at the end
+            const newStop = {
+                id: Date.now(),
+                city: trimmedCity,
+                country: getCountryForCity(trimmedCity),
+                startDate: new Date(journey.endDate), // Start after journey ends
+                endDate: new Date(journey.endDate.getTime() + (24 * 60 * 60 * 1000)), // 1 day duration
+                activities: []
+            };
+
+            // Update journey end date
+            journey.endDate = new Date(newStop.endDate.getTime() + (24 * 60 * 60 * 1000)); // Add one more day
+            journey.duration = Math.ceil((journey.endDate - journey.startDate) / (1000 * 3600 * 24)) + 1;
+
+            // Add stop to journey
+            journey.stops.push(newStop);
+
+            // Save and re-render
+            window.GlobeTrotter.Journeys.save([journey]); // Save just this journey for now
+            renderItinerary(journey);
+            updateTripSummary(journey);
+        }
+
+        function renderItinerary(journey) {
+            const container = document.getElementById('itinerary-container');
+            if (!container) return;
+
+            // Clear container
+            container.innerHTML = '';
+
+            if (!journey.stops || journey.stops.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-itinerary">
+                        <p>No stops added yet. Click "ADD CITY" to begin building your itinerary.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render each stop
+            journey.stops.forEach((stop, stopIndex) => {
+                const stopElement = createStopElement(stop, stopIndex, journey);
+                container.appendChild(stopElement);
+            });
+        }
+
+        function createStopElement(stop, stopIndex, journey) {
+            const stopDiv = document.createElement('div');
+            stopDiv.className = 'itinerary-stop';
+            stopDiv.dataset.stopId = stop.id;
+
+            const startDate = new Date(stop.startDate);
+            const endDate = new Date(stop.endDate);
+
+            stopDiv.innerHTML = `
+                <div class="stop-header">
+                    <h2 class="stop-city">${stop.city}</h2>
+                    ${stop.country ? `<p class="stop-country">${stop.country}</p>` : ''}
+                    <div class="stop-dates">
+                        <span>${formatDate(startDate)} — ${formatDate(endDate)}</span>
+                        <span class="stop-duration">${Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1} DAYS</span>
+                    </div>
+                </div>
+
+                <div class="stop-days">
+                    ${renderDaysForStop(stop, journey)}
+                </div>
+
+                <div class="stop-actions">
+                    <button class="btn btn-outline btn-sm" onclick="addActivityToStop(${stop.id})">
+                        + ADD ACTIVITY
+                    </button>
+                    <button class="btn btn-outline btn-sm ml-2" onclick="removeStop(${stop.id})">
+                        REMOVE STOP
+                    </button>
+                </div>
+            `;
+
+            return stopDiv;
+        }
+
+        function renderDaysForStop(stop, journey) {
+            const startDate = new Date(stop.startDate);
+            const endDate = new Date(stop.endDate);
+            const daysDiff = Math.ceil((endDate - startDate) / (1000 * 3600 * 24)) + 1;
+
+            let daysHTML = '';
+
+            for (let day = 0; day < daysDiff; day++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(currentDate.getDate() + day);
+
+                const dayNumber = day + 1;
+                const dayDate = formatDate(currentDate);
+
+                // Get activities for this specific day
+                const dayActivities = stop.activities.filter(activity => {
+                    const activityDate = new Date(activity.date);
+                    return activityDate.toDateString() === currentDate.toDateString();
+                });
+
+                daysHTML += `
+                    <div class="day-section">
+                        <div class="day-header">
+                            <span class="day-label">DAY ${String(dayNumber).padStart(2, '0')}</span>
+                            <span class="day-date">${dayDate}</span>
+                        </div>
+
+                        <div class="activities-timeline">
+                            ${renderActivitiesForDay(dayActivities, stop.id)}
+
+                            ${dayActivities.length > 0 ? '' : `
+                                <div class="empty-day">
+                                    <p>No activities planned for this day yet.</p>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return daysHTML;
+        }
+
+        function renderActivitiesForDay(activities, stopId) {
+            if (!activities || activities.length === 0) return '';
+
+            // Sort activities by time
+            const sortedActivities = [...activities].sort((a, b) => {
+                const timeA = new Date(`1970-01-01T${activity.startTime}:00`).getTime();
+                const timeB = new Date(`1970-01-01T${b.startTime}:00`).getTime();
+                return timeA - timeB;
+            });
+
+            let activitiesHTML = '';
+
+            sortedActivities.forEach((activity, index) => {
+                activitiesHTML += `
+                    <div class="activity-item" data-activity-id="${activity.id}">
+                        <div class="activity-time">${activity.startTime} — ${activity.endTime}</div>
+                        <div class="activity-details">
+                            <h3 class="activity-name">${activity.name}</h3>
+                            <p class="activity-category">${activity.category}</p>
+                            ${activity.estimatedCost > 0 ?
+                                `<p class="activity-cost">₹${activity.estimatedCost.toLocaleString()}</p>` :
+                                `<p class="activity-cost">FREE</p>`}
+                        </div>
+                        <div class="activity-actions">
+                            <button class="btn btn-outline btn-xs" onclick="editActivity('${activity.id}')">
+                                EDIT
+                            </button>
+                            <button class="btn btn-outline btn-xs ml-1" onclick="deleteActivity('${activity.id}', '${stopId}')">
+                                DELETE
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            return activitiesHTML;
+        }
+
+        function addActivityToStop(stopId) {
+            const journey = getCurrentJourney();
+            if (!journey) return;
+
+            const stop = journey.stops.find(s => s.id === stopId);
+            if (!stop) return;
+
+            // Show activity modal
+            showActivityModal(stop, (activityData) => {
+                // Add activity to stop
+                stop.activities.push({
+                    id: Date.now() + Math.random(),
+                    name: activityData.name,
+                    category: activityData.category,
+                    date: activityData.date,
+                    startTime: activityData.startTime,
+                    endTime: activityData.endTime,
+                    estimatedCost: activityData.estimatedCost,
+                    description: activityData.description || ""
+                });
+
+                // Save and update
+                window.GlobeTrotter.Journeys.save([journey]);
+                renderItinerary(journey);
+                updateTripSummary(journey);
+            });
+        }
+
+        function editActivity(activityId) {
+            const journey = getCurrentJourney();
+            if (!journey) return;
+
+            // Find activity across all stops
+            let activity = null;
+            let parentStop = null;
+
+            for (const stop of journey.stops) {
+                const foundActivity = stop.activities.find(a => a.id === parseInt(activityId));
+                if (foundActivity) {
+                    activity = foundActivity;
+                    parentStop = stop;
+                    break;
+                }
+            }
+
+            if (!activity || !parentStop) return;
+
+            // Show edit modal with current values
+            showActivityModal(parentStop, (activityData) => {
+                // Update activity
+                activity.name = activityData.name;
+                activity.category = activityData.category;
+                activity.date = activityData.date;
+                activity.startTime = activityData.startTime;
+                activity.endTime = activityData.endTime;
+                activity.estimatedCost = activityData.estimatedCost;
+                activity.description = activityData.description || "";
+
+                // Save and update
+                window.GlobeTrotter.Journeys.save([journey]);
+                renderItinerary(journey);
+                updateTripSummary(journey);
+            }, activity);
+        }
+
+        function deleteActivity(activityId, stopId) {
+            if (!confirm("Are you sure you want to delete this activity?")) return;
+
+            const journey = getCurrentJourney();
+            if (!journey) return;
+
+            const stop = journey.stops.find(s => s.id === parseInt(stopId));
+            if (!stop) return;
+
+            stop.activities = stop.activities.filter(a => a.id !== parseInt(activityId));
+
+            // Save and update
+            window.GlobeTrotter.Journeys.save([journey]);
+            renderItinerary(journey);
+            updateTripSummary(journey);
+        }
+
+        function removeStop(stopId) {
+            if (!confirm("Are you sure you want to remove this stop and all its activities?")) return;
+
+            const journey = getCurrentJourney();
+            if (!journey) return;
+
+            journey.stops = journey.stops.filter(s => s.id !== stopId);
+
+            // Save and update
+            window.GlobeTrotter.Journeys.save([journey]);
+            renderItinerary(journey);
+            updateTripSummary(journey);
+        }
+
+        function showActivityModal(stop, onSubmit, preFillData = null) {
+            // Create modal backdrop
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop';
+            backdrop.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>${preFillData ? 'EDIT ACTIVITY' : 'ADD ACTIVITY'}</h3>
+                        <button class="btn btn-outline btn-sm modal-close">&times;</button>
+                    </div>
+
+                    <form class="activity-form" id="activity-form">
+                        <div class="form-group">
+                            <label for="activity-name">ACTIVITY</label>
+                            <select id="activity-name" required>
+                                <option value="">Select Activity</option>
+                                ${getActivityOptionsForCity(stop.city)}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="activity-date">DATE</label>
+                            <input type="date" id="activity-date" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="start-time">START</label>
+                                <input type="time" id="start-time" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="end-time">END</label>
+                                <input type="time" id="end-time" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="estimated-cost">ESTIMATED COST</label>
+                            <input type="number" id="estimated-cost" min="0" placeholder="₹ 0">
+                            <span class="currency-symbol">₹</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="activity-description">DESCRIPTION</label>
+                            <textarea id="activity-description" rows="3" placeholder="Add optional details..."></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" id="modal-cancel">CANCEL</button>
+                            <button type="submit" class="btn btn-primary">ADD ACTIVITY</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(backdrop);
+
+            // Get form elements
+            const form = backdrop.querySelector('#activity-form');
+            const nameSelect = backdrop.querySelector('#activity-name');
+            const dateInput = backdrop.querySelector('#activity-date');
+            const startTimeInput = backdrop.querySelector('#start-time');
+            const endTimeInput = backdrop.querySelector('#end-time');
+            const costInput = backdrop.querySelector('#estimated-cost');
+            const descriptionInput = backdrop.querySelector('#activity-description');
+            const cancelBtn = backdrop.querySelector('#modal-cancel');
+            const closeBtn = backdrop.querySelector('.modal-close');
+
+            // Set default date to first day of stop
+            const stopStartDate = new Date(stop.startDate);
+            dateInput.value = stopStartDate.toISOString().split('T')[0];
+
+            // Set default times
+            startTimeInput.value = "09:00";
+            endTimeInput.value = "11:00";
+
+            // Prefill if editing
+            if (preFillData) {
+                nameSelect.value = preFillData.name;
+                dateInput.value = preFillData.date;
+                startTimeInput.value = preFillData.startTime;
+                endTimeInput.value = preFillData.endTime;
+                costInput.value = preFillData.estimatedCost;
+                descriptionInput.value = preFillData.description;
+            }
+
+            // Handle form submission
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const activityName = nameSelect.value;
+                const activityDate = dateInput.value;
+                const startTime = startTimeInput.value;
+                const endTime = endTimeInput.value;
+                const estimatedCost = parseFloat(costInput.value) || 0;
+                const description = descriptionInput.value;
+
+                // Validation
+                if (!activityName) {
+                    alert('Please select an activity');
+                    return;
+                }
+
+                if (!activityDate) {
+                    alert('Please select a date');
+                    return;
+                }
+
+                if (!startTime || !endTime) {
+                    alert('Please select start and end times');
+                    return;
+                }
+
+                if (isNaN(estimatedCost) || estimatedCost < 0) {
+                    alert('Please enter a valid cost');
+                    return;
+                }
+
+                // Get activity details from catalog
+                const activityDetails = getActivityDetailsByName(activityName, stop.city);
+
+                const activityData = {
+                    name: activityName,
+                    category: activityDetails.category || activityDetails.name.split(' ').pop() || 'Activity',
+                    date: activityDate,
+                    startTime: startTime,
+                    endTime: endTime,
+                    estimatedCost: estimatedCost,
+                    description: description
+                };
+
+                onSubmit(activityData);
+                closeModal(backdrop);
+            });
+
+            // Handle cancel/close
+            cancelBtn.addEventListener('click', () => closeModal(backdrop));
+            closeBtn.addEventListener('click', () => closeModal(backdrop));
+            backdrop.addEventListener('click', (e) => {
+                if (e.target === backdrop) closeModal(backdrop);
+            });
+
+            // Focus on activity select
+            setTimeout(() => nameSelect.focus(), 100);
+        }
+
+        function closeModal(backdrop) {
+            if (backdrop.parentNode) {
+                backdrop.parentNode.removeChild(backdrop);
+            }
+        }
+
+        function getActivityOptionsForCity(city) {
+            const cityKey = city.toLowerCase().replace(/\s+/g, '');
+            const activities = ActivityCatalog[cityKey] || [];
+
+            return activities.map(activity => {
+                const costText = activity.estimatedCost > 0 ?
+                    ` (₹${activity.estimatedCost.toLocaleString()})` :
+                    ' (FREE)';
+                return `<option value="${activity.name}">${activity.name}${costText}</option>`;
+            }).join('');
+        }
+
+        function getActivityDetailsByName(activityName, city) {
+            const cityKey = city.toLowerCase().replace(/\s+/g, '');
+            const activities = ActivityCatalog[cityKey] || [];
+
+            return activities.find(activity => activity.name === activityName) || {
+                name: activityName,
+                category: 'Activity',
+                estimatedCost: 0
+            };
+        }
+
+        function getCurrentJourney() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const journeyId = parseInt(urlParams.get('id')) || 1;
+
+            const journeys = window.GlobeTrotter.Journeys.getAll();
+            return journeys.find(j => j.id === journeyId) || null;
+        }
+
+        function updateTripSummary(journey) {
+            if (!journey) return;
+
+            // Calculate totals
+            let totalEstimatedCost = 0;
+            let totalCities = journey.stops ? journey.stops.length : 0;
+            let totalActivities = 0;
+
+            if (journey.stops) {
+                journey.stops.forEach(stop => {
+                    if (stop.activities) {
+                        stop.activities.forEach(activity => {
+                            totalEstimatedCost += activity.estimatedCost || 0;
+                        });
+                        totalActivities += stop.activities.length;
+                    }
+                });
+            }
+
+            const remainingBudget = (journey.budget || 0) - totalEstimatedCost;
+            const budgetStatus = remainingBudget < 0 ? 'over-budget' : 'within-budget';
+
+            // Update DOM elements
+            const estimatedCostEl = document.getElementById('estimated-cost');
+            const remainingBudgetEl = document.getElementById('remaining-budget');
+            const cityCountEl = document.getElementById('city-count');
+            const activityCountEl = document.getElementById('activity-count');
+
+            if (estimatedCostEl) {
+                estimatedCostEl.textContent = `₹${totalEstimatedCost.toLocaleString()}`;
+                estimatedCostEl.className = `summary-value ${budgetStatus}`;
+            }
+
+            if (remainingBudgetEl) {
+                remainingBudgetEl.textContent = `₹${Math.max(0, remainingBudget).toLocaleString()}`;
+                if (remainingBudget < 0) {
+                    remainingBudgetEl.textContent = `-₹${Math.abs(remainingBudget).toLocaleString()}`;
+                    remainingBudgetEl.className = 'summary-value over-budget';
+                } else {
+                    remainingBudgetEl.className = 'summary-value';
+                }
+            }
+
+            if (cityCountEl) cityCountEl.textContent = totalCities;
+            if (activityCountEl) activityCountEl.textContent = totalActivities;
+
+            // Check for schedule conflicts
+            checkScheduleConflicts(journey);
+        }
+
+        function checkScheduleConflicts(journey) {
+            // Remove any existing conflict warnings
+            const existingWarnings = document.querySelectorAll('.schedule-conflict');
+            existingWarnings.forEach(warning => warning.remove());
+
+            if (!journey.stops) return;
+
+            // Check each stop for time conflicts
+            journey.stops.forEach((stop, stopIndex) => {
+                const dayActivitiesMap = {};
+
+                // Group activities by date
+                stop.activities.forEach(activity => {
+                    const dateKey = activity.date;
+                    if (!dayActivitiesMap[dateKey]) {
+                        dayActivitiesMap[dateKey] = [];
+                    }
+                    dayActivitiesMap[dateKey].push(activity);
+                });
+
+                // Check each day for overlaps
+                Object.keys(dayActivitiesMap).forEach(dateKey => {
+                    const activities = dayActivitiesMap[dateKey];
+
+                    // Sort by start time
+                    activities.sort((a, b) => {
+                        const timeA = new Date(`1970-01-01T${a.startTime}:00`).getTime();
+                        const timeB = new Date(`1970-01-01T${b.startTime}:00`).getTime();
+                        return timeA - timeB;
+                    });
+
+                    // Check for overlaps
+                    for (let i = 0; i < activities.length - 1; i++) {
+                        const currentActivity = activities[i];
+                        const nextActivity = activities[i + 1];
+
+                        const currentEnd = new Date(`1970-01-01T${currentActivity.endTime}:00`).getTime();
+                        const nextStart = new Date(`1970-01-01T${nextActivity.startTime}:00`).getTime();
+
+                        if (currentEnd > nextStart) {
+                            // Conflict detected
+                            showScheduleConflict(currentActivity, nextActivity, stop.city, dateKey);
+                        }
+                    }
+                });
+            });
+        }
+
+        function showScheduleConflict(activity1, activity2, city, date) {
+            const itineraryContainer = document.getElementById('itinerary-container');
+            if (!itineraryContainer) return;
+
+            const conflictDiv = document.createElement('div');
+            conflictDiv.className = 'schedule-conflict';
+            conflictDiv.innerHTML = `
+                <div class="conflict-content">
+                    <h4>SCHEDULE CONFLICT</h4>
+                    <p><strong>${activity1.name}</strong></p>
+                    <p class="conflict-time">${activity1.startTime} — ${activity1.endTime}</p>
+
+                    <div class="conflict-divider"></div>
+
+                    <p><strong>${activity2.name}</strong></p>
+                    <p class="conflict-time">${activity2.startTime} — ${activity2.endTime}</p>
+
+                    <p class="conflict-message">These activities overlap in ${city} on ${formatDate(new Date(date))}.</p>
+
+                    <button class="btn btn-outline btn-sm conflict-button">
+                        REVIEW SCHEDULE
+                    </button>
+                </div>
+            `;
+
+            itineraryContainer.appendChild(conflictDiv);
+        }
+
+        function formatDate(date) {
+            if (!(date instanceof Date)) date = new Date(date);
+            return new Intl.DateTimeFormat('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            }).format(date).replace(/\s\d{4}$/, ''); // Remove year if same year
+        }
+
+        // Helper function to find stop by ID
+        window.findStopById = function(stopId) {
+            const journey = getCurrentJourney();
+            if (!journey || !journey.stops) return null;
+            return journey.stops.find(s => s.id === stopId);
+        };
+    </script>
+</body>
+</html>

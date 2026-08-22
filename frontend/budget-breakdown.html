@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Breakdown - GlobeTrotter</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <h1>GlobeTrotter</h1>
+                <p>Travel Reimagined</p>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Journeys</a></li>
+                    <li><a href="#">Destinations</a></li>
+                    <li><a href="#">Collections</a></li>
+                </ul>
+            </nav>
+            <div class="user-actions">
+                <button class="btn btn-outline">Profile</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="site-main">
+        <div class="container">
+            <!-- Budget Breakdown -->
+            <section class="budget-breakdown">
+                <!-- Loading state -->
+                <div class="loading-state">
+                    <p>Loading your budget breakdown...</p>
+                </div>
+
+                <!-- Error state -->
+                <div class="error-state">
+                    <p>Journey not found. Please check the journey ID and try again.</p>
+                    <a href="index.html" class="btn btn-outline">Back to Journeys</a>
+                </div>
+
+                <!-- Budget content -->
+                <div class="budget-content">
+                    <!-- Editorial Intro -->
+                    <div class="budget-editorial">
+                        <span class="budget-label">BUDGET</span>
+                        <h1 class="budget-heading">Where your budget goes.</h1>
+                        <p class="budget-subtext">
+                            Travel, thoughtfully accounted for.
+                        </p>
+                    </div>
+
+                    <!-- Budget Overview -->
+                    <div class="budget-overview">
+                        <div class="budget-item">
+                            <span class="budget-label">PLANNED BUDGET</span>
+                            <span class="budget-value" id="planned-budget">₹80,000</span>
+                        </div>
+                        <div class="budget-item">
+                            <span class="budget-label">ESTIMATED SPEND</span>
+                            <span class="budget-value" id="estimated-spend">₹0</span>
+                        </div>
+                        <div class="budget-item">
+                            <span class="budget-label">REMAINING</span>
+                            <span class="budget-value" id="remaining-budget">₹80,000</span>
+                        </div>
+                    </div>
+
+                    <!-- Budget Progress -->
+                    <div class="budget-progress">
+                        <div class="progress-label">BUDGET USED</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <span class="progress-percentage" id="progress-percentage">0%</span>
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="chart-container">
+                        <div class="chart-title">Expense Categories</span>
+                        <div class="chart" id="expense-chart"></div>
+                    </div>
+
+                    <!-- Category Breakdown -->
+                    <div class="category-breakdown">
+                        <h2 class="section-heading">Category Breakdown</h2>
+                        <div class="category-list" id="category-list">
+                            <!-- Category items will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- City Breakdown (optional) -->
+                    <div class="city-breakdown">
+                        <h2 class="section-heading">City Breakdown</h2>
+                        <div class="city-list" id="city-list">
+                            <!-- City items will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Trip Insight -->
+                    <div class="trip-insight">
+                        <h2 class="section-heading">Trip Insight</h2>
+                        <p class="insight-text" id="insight-text"></p>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="budget-nav">
+                        <a href="itinerary-view.html" class="btn btn-outline" id="back-to-itinerary">← BACK TO ITINERARY</a>
+                        <a href="itinerary-builder.html" class="btn btn-primary" id="edit-itinerary">EDIT ITINERARY</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2026 GlobeTrotter. All rights reserved.</p>
+            <div class="luxury-divider"></div>
+            <p class="text-center" style="font-size: 0.75rem; color: #999; margin-top: 1.5rem;">
+                A luxury travel experience platform
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get journey ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const journeyId = parseInt(urlParams.get('id'));
+
+            if (!journeyId) {
+                showError();
+                return;
+            }
+
+            // Load journey data
+            const journeys = window.GlobeTrotter.Journeys.getAll();
+            const journey = journeys.find(j => j.id === journeyId);
+
+            if (!journey) {
+                showError();
+                return;
+            }
+
+            // Hide loading and error states, show budget content
+            document.querySelector('.loading-state').style.display = 'none';
+            document.querySelector('.error-state').style.display = 'none';
+            document.querySelector('.budget-content').style.display = 'block';
+
+            // Populate the budget breakdown
+            populateBudgetBreakdown(journey);
+        });
+
+        function showError() {
+            document.querySelector('.loading-state').style.display = 'none';
+            document.querySelector('.error-state').style.display = 'block';
+            document.querySelector('.budget-content').style.display = 'none';
+        }
+
+        function populateBudgetBreakdown(journey) {
+            // Set journey ID for navigation links
+            document.getElementById('back-to-itinerary').href = `itinerary-view.html?id=${journey.id}`;
+            document.getElementById('edit-itinerary').href = `itinerary-builder.html?id=${journey.id}`;
+
+            // Calculate totals from activities
+            let totalEstimatedCost = 0;
+            const categoryTotals = {};
+            const cityTotals = {};
+
+            if (journey.stops && journey.stops.length > 0) {
+                journey.stops.forEach(stop => {
+                    let cityTotal = 0;
+                    if (stop.activities && stop.activities.length > 0) {
+                        stop.activities.forEach(activity => {
+                            const cost = activity.estimatedCost || 0;
+                            totalEstimatedCost += cost;
+                            cityTotal += cost;
+
+                            // Category totals
+                            const category = activity.category || 'Other';
+                            categoryTotals[category] = (categoryTotals[category] || 0) + cost;
+                        });
+                    }
+                    // City totals
+                    if (stop.city) {
+                        cityTotals[stop.city] = (cityTotals[stop.city] || 0) + cityTotal;
+                    }
+                });
+            }
+
+            const budget = journey.budget || 0;
+            const remainingBudget = budget - totalEstimatedCost;
+            const budgetUsedPercentage = budget > 0 ? (totalEstimatedCost / budget) * 100 : 0;
+
+            // Update budget overview
+            document.getElementById('planned-budget').textContent = `₹${budget.toLocaleString()}`;
+            document.getElementById('estimated-spend').textContent = `₹${totalEstimatedCost.toLocaleString()}`;
+            const remainingEl = document.getElementById('remaining-budget');
+            if (remainingBudget < 0) {
+                remainingEl.textContent = `-₹${Math.abs(remainingBudget).toLocaleString()}`;
+                remainingEl.classList.add('over-budget');
+            } else {
+                remainingEl.textContent = `₹${remainingBudget.toLocaleString()}`;
+                remainingEl.classList.remove('over-budget');
+            }
+
+            // Update budget progress
+            const progressFill = document.getElementById('progress-fill');
+            const progressPercentage = document.getElementById('progress-percentage');
+            progressFill.style.width = `${budgetUsedPercentage}%`;
+            progressPercentage.textContent = `${Math.round(budgetUsedPercentage)}%`;
+
+            if (budgetUsedPercentage >= 100) {
+                progressFill.style.backgroundColor = '#dc2626'; // Red for over budget
+                document.querySelector('.progress-label').textContent = 'OVER BUDGET';
+            } else {
+                progressFill.style.backgroundColor = 'var(--color-black)'; // Deep navy/black
+                document.querySelector('.progress-label').textContent = 'BUDGET USED';
+            }
+
+            // Render expense chart (donut chart)
+            renderExpenseChart(categoryTotals);
+
+            // Render category breakdown
+            renderCategoryBreakdown(categoryTotals, totalEstimatedCost);
+
+            // Render city breakdown
+            renderCityBreakdown(cityTotals);
+
+            // Generate trip insight
+            generateTripInsight(journey, totalEstimatedCost, budget, remainingBudget, categoryTotals);
+        }
+
+        function renderExpenseChart(categoryTotals) {
+            const chartContainer = document.getElementById('expense-chart');
+            if (!chartContainer) return;
+
+            // Clear container
+            chartContainer.innerHTML = '';
+
+            if (Object.keys(categoryTotals).length === 0) {
+                chartContainer.innerHTML = '<p class="text-center py-8">No expense data available.</p>';
+                return;
+            }
+
+            // Calculate total for percentages
+            const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
+
+            // Create SVG donut chart
+            const svgNS = "http://www.w3.org/2000/svg";
+            const width = 200;
+            const height = 200;
+            const radius = 80;
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            const svg = document.createElementNS(svgNS, "svg");
+            svg.setAttribute("width", width);
+            svg.setAttribute("height", height);
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            svg.classList.add("donut-chart");
+
+            let cumulativePercent = 0;
+            const colors = [
+                'var(--color-black)',
+                '#4a4a4a',
+                '#666666',
+                '#808080',
+                '#999999',
+                '#b3b3b3',
+                '#cccccc'
+            ];
+
+            // Sort categories by value descending
+            const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+
+            sortedCategories.forEach(([category, value], index) => {
+                const percent = (value / total) * 100;
+                const endPercent = cumulativePercent + percent;
+                const endAngle = (endPercent / 100) * 2 * Math.PI;
+                const startAngle = (cumulativePercent / 100) * 2 * Math.PI;
+
+                // Calculate arc path
+                const x1 = centerX + radius * Math.cos(startAngle);
+                const y1 = centerY + radius * Math.sin(startAngle);
+                const x2 = centerX + radius * Math.cos(endAngle);
+                const y2 = centerY + radius * Math.sin(endAngle);
+                const largeArc = percent > 50 ? "1" : "0";
+
+                const pathData = [
+                    "M", centerX, centerY - radius,
+                    "A", radius, radius, 0, largeArc, 1, x2, y2,
+                    "L", x2, y2,
+                    "A", radius, radius, 0, largeArc, 1, centerX, centerY - radius,
+                    "Z"
+                ].join(" ");
+
+                const path = document.createElementNS(svgNS, "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("fill", colors[index % colors.length]);
+                path.setAttribute("class", "chart-slice");
+                svg.appendChild(path);
+
+                cumulativePercent = endPercent;
+            });
+
+            // Add center circle for donut effect
+            const centerCircle = document.createElementNS(svgNS, "circle");
+            centerCircle.setAttribute("cx", centerX);
+            centerCircle.setAttribute("cy", centerY);
+            centerCircle.setAttribute("radius", radius * 0.4);
+            centerCircle.setAttribute("fill", "var(--color-off-white)");
+            svg.appendChild(centerCircle);
+
+            // Add total in center
+            const totalText = document.createElementNS(svgNS, "text");
+            totalText.setAttribute("x", centerX);
+            totalText.setAttribute("cy", centerY - 10);
+            totalText.setAttribute("text-anchor", "middle");
+            totalText.setAttribute("fill", "var(--color-black)");
+            totalText.setAttribute("font-weight", "bold");
+            totalText.setAttribute("font-size", "16");
+            totalText.textContent = `₹${total.toLocaleString()}`;
+            svg.appendChild(totalText);
+
+            const totalLabel = document.createElementNS(svgNS, "text");
+            totalLabel.setAttribute("x", centerX);
+            totalLabel.setAttribute("y", centerY + 10);
+            totalLabel.setAttribute("text-anchor", "middle");
+            totalLabel.setAttribute("fill", "var(--color-gray)");
+            totalLabel.setAttribute("font-size", "12");
+            totalLabel.textContent = "TOTAL";
+            svg.appendChild(totalLabel);
+
+            chartContainer.appendChild(svg);
+        }
+
+        function renderCategoryBreakdown(categoryTotals, totalEstimatedCost) {
+            const categoryList = document.getElementById('category-list');
+            if (!categoryList) return;
+
+            // Clear container
+            categoryList.innerHTML = '';
+
+            if (Object.keys(categoryTotals).length === 0) {
+                categoryList.innerHTML = '<p class="text-center py-8">No category data available.</p>';
+                return;
+            }
+
+            // Sort categories by value descending
+            const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+
+            sortedCategories.forEach(([category, value]) => {
+                const percent = totalEstimatedCost > 0 ? (value / totalEstimatedCost) * 100 : 0;
+
+                const categoryItem = document.createElement('div');
+                categoryItem.className = 'category-item';
+                categoryItem.innerHTML = `
+                    <div class="category-name">${category}</div>
+                    <div class="category-value">₹${value.toLocaleString()}</div>
+                    <div class="category-percent">${percent.toFixed(1)}%</div>
+                `;
+
+                categoryList.appendChild(categoryItem);
+            });
+        }
+
+        function renderCityBreakdown(cityTotals) {
+            const cityList = document.getElementById('city-list');
+            if (!cityList) return;
+
+            // Clear container
+            cityList.innerHTML = '';
+
+            if (Object.keys(cityTotals).length === 0) {
+                cityList.innerHTML = '<p class="text-center py-8">No city data available.</p>';
+                return;
+            }
+
+            // Sort cities by value descending
+            const sortedCities = Object.entries(cityTotals).sort((a, b) => b[1] - a[1]);
+
+            sortedCities.forEach(([city, value]) => {
+                const cityItem = document.createElement('div');
+                cityItem.className = 'city-item';
+                cityItem.innerHTML = `
+                    <div class="city-name">${city}</div>
+                    <div class="city-value">₹${value.toLocaleString()}</div>
+                `;
+
+                cityList.appendChild(cityItem);
+            });
+        }
+
+        function generateTripInsight(journey, totalEstimatedCost, budget, remainingBudget, categoryTotals) {
+            const insightText = document.getElementById('insight-text');
+            if (!insightText) return;
+
+            let insight = '';
+
+            // If over budget
+            if (remainingBudget < 0) {
+                insight = `You are over budget by ₹${Math.abs(remainingBudget).toLocaleString()}. Consider reducing expenses in your highest spending categories.`;
+            }
+            // If under budget
+            else if (remainingBudget > 0) {
+                const days = journey.duration || 1;
+                const dailyRemaining = remainingBudget / days;
+                insight = `You have ₹${remainingBudget.toLocaleString()} remaining, giving you approximately ₹${dailyRemaining.toLocaleString()} per day for the remaining ${days} days.`;
+            }
+            // If exactly on budget
+            else {
+                insight = "Your estimated expenses match your planned budget exactly.";
+            }
+
+            // Add category insight if we have data
+            if (Object.keys(categoryTotals).length > 0) {
+                const topCategory = Object.entries(categoryTotals).reduce((a, b) => b[1] > a[1] ? b : a)[0];
+                insight += ` Your largest expense category is ${topCategory}.`;
+            }
+
+            insightText.textContent = insight;
+        }
+    </script>
+</body>
+</html>
