@@ -35,6 +35,65 @@ interface AppContextValue {
   clearAllUserData: () => void;
 }
 
+export function generateDestinationActivities(city: string, country: string): Activity[] {
+  const locName = city || country || 'Destination';
+  const ctryName = country || city || 'Local Area';
+  const norm = (locName + ' ' + ctryName).toLowerCase();
+
+  if (norm.includes('hawaii') || norm.includes('honolulu') || norm.includes('oahu') || norm.includes('waikiki')) {
+    return [
+      { id: `act-hi-1`, name: 'Waikiki Sunset Surf & Beachfront Experience', city: 'Honolulu', country: 'Hawaii', category: 'Adventure', duration: '3.5 hours', price: 6800, description: 'Catch waves along Waikiki Beach and relax with beachfront tropical refreshments at sunset.', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-hi-2`, name: 'Diamond Head Crater Sunrise Summit Hike', city: 'Honolulu', country: 'Hawaii', category: 'Nature', duration: '2.5 hours', price: 2500, description: 'Hike to the volcanic crater summit for 360-degree panoramic views of Oahu coastline.', image: 'https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+      { id: `act-hi-3`, name: 'Traditional Hawaiian Luau & Fire Dance Dinner', city: 'Honolulu', country: 'Hawaii', category: 'Culture', duration: '4 hours', price: 9500, description: 'Authentic Polynesian feast, ukulele music, and fire-knife dance performances.', image: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-hi-4`, name: 'North Shore Ocean Catamaran & Turtle Snorkel', city: 'Honolulu', country: 'Hawaii', category: 'Adventure', duration: '5 hours', price: 11200, description: 'Cruise pristine North Shore bays and swim alongside sea turtles and ocean wildlife.', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=85', rating: 5.0 },
+    ];
+  }
+
+  if (norm.includes('paris') || norm.includes('france')) {
+    return [
+      { id: `act-fr-1`, name: 'Eiffel Tower Sunset & Champ de Mars Walk', city: 'Paris', country: 'France', category: 'Sightseeing', duration: '2.5 hours', price: 3500, description: 'Golden hour view of Paris from the Eiffel Tower observation deck followed by garden strolls.', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-fr-2`, name: 'Sunset Champagne Seine River Cruise', city: 'Paris', country: 'France', category: 'Sightseeing', duration: '1.5 hours', price: 5400, description: 'Glide past Notre-Dame and Louvre monuments sipping artisanal French champagne.', image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+      { id: `act-fr-3`, name: 'Louvre Museum Masterpieces Guided Tour', city: 'Paris', country: 'France', category: 'Culture', duration: '3 hours', price: 4800, description: 'Priority entrance to view the Mona Lisa, Venus de Milo, and French Renaissance art.', image: 'https://images.unsplash.com/photo-1565099824688-e93eb20fe622?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-fr-4`, name: 'French Pastry & Macaron Masterclass in Le Marais', city: 'Paris', country: 'France', category: 'Food', duration: '2.5 hours', price: 6200, description: 'Bake authentic French macarons and croissants with a Parisian pastry chef.', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+    ];
+  }
+
+  if (norm.includes('tokyo') || norm.includes('kyoto') || norm.includes('japan')) {
+    return [
+      { id: `act-jp-1`, name: 'Tsukiji Outer Market Seafood & Sushi Tasting', city: 'Tokyo', country: 'Japan', category: 'Food', duration: '3 hours', price: 6500, description: 'Sample fresh sashimi, tamagoyaki, and Edomae sushi crafted by Tokyo masters.', image: 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-jp-2`, name: 'Senso-ji Temple & Asakusa Old Town Guided Walk', city: 'Tokyo', country: 'Japan', category: 'Culture', duration: '2.5 hours', price: 3200, description: 'Historic Buddhist temple exploration and Nakamise shopping street snacks.', image: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+      { id: `act-jp-3`, name: 'Traditional Matcha Tea Ceremony in Gion', city: 'Kyoto', country: 'Japan', category: 'Culture', duration: '2 hours', price: 4500, description: 'Authentic Japanese tea preparation and wagashi sweets tasting in a wooden machiya.', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-jp-4`, name: 'Shinkansen Day Excursion to Mt. Fuji & Lake Kawaguchi', city: 'Tokyo', country: 'Japan', category: 'Adventure', duration: '8 hours', price: 11500, description: 'Scenic bullet train journey to iconic Mount Fuji view points and ropeway rides.', image: 'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=800&q=85', rating: 5.0 },
+    ];
+  }
+
+  if (norm.includes('zurich') || norm.includes('switzerland') || norm.includes('alps') || norm.includes('interlaken')) {
+    return [
+      { id: `act-ch-1`, name: 'Swiss Alps Glacier Flight & Alpine Hike', city: 'Zurich', country: 'Switzerland', category: 'Adventure', duration: '5 hours', price: 15400, description: 'Soar past snowy peaks and hike high-alpine glacier trails with mountain lake views.', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=85', rating: 5.0 },
+      { id: `act-ch-2`, name: 'Jungfraujoch – Top of Europe Glacier Experience', city: 'Interlaken', country: 'Switzerland', category: 'Sightseeing', duration: '7 hours', price: 16800, description: 'Cogwheel train trip to 3,454m glacier observatory, ice palace, and snow plateau.', image: 'https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-ch-3`, name: 'Lake Zurich Fondue Cruise & Old Town Tour', city: 'Zurich', country: 'Switzerland', category: 'Food', duration: '3 hours', price: 6800, description: 'Scenic boat cruise serving melted Swiss cheese fondue alongside lakeside sights.', image: 'https://images.unsplash.com/photo-1527668752968-14dc70a27c95?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+      { id: `act-ch-4`, name: 'Interlaken Tandem Paragliding over Alpine Lakes', city: 'Interlaken', country: 'Switzerland', category: 'Adventure', duration: '2 hours', price: 18500, description: 'Soar like a bird above Lake Thun and Lake Brienz with certified mountain pilots.', image: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=85', rating: 5.0 },
+    ];
+  }
+
+  if (norm.includes('dubai') || norm.includes('uae')) {
+    return [
+      { id: `act-ae-1`, name: 'Red Dune Desert Safari & Sunset Bedouin Dinner', city: 'Dubai', country: 'UAE', category: 'Adventure', duration: '6 hours', price: 7900, description: 'Dune bashing in 4x4, camel riding, henna painting, and BBQ banquet under desert stars.', image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-ae-2`, name: 'Burj Khalifa At The Top Observation Deck', city: 'Dubai', country: 'UAE', category: 'Sightseeing', duration: '2 hours', price: 4200, description: 'High-speed elevator ride to the 148th floor for panoramic views over Dubai skyline.', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+      { id: `act-ae-3`, name: 'Private Sunset Yacht Cruise in Dubai Marina', city: 'Dubai', country: 'UAE', category: 'Sightseeing', duration: '2.5 hours', price: 12500, description: 'Cruise past Palm Jumeirah and Atlantis The Royal with complimentary luxury appetizers.', image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+      { id: `act-ae-4`, name: 'Dubai Creek Old Town & Gold Souk Cultural Tour', city: 'Dubai', country: 'UAE', category: 'Culture', duration: '3 hours', price: 3400, description: 'Abra boat ride across Dubai Creek and guided walk through aromatic spice and gold markets.', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=85', rating: 4.7 },
+    ];
+  }
+
+  // Fallback template for any other custom location
+  return [
+    { id: `act-gen-1`, name: `${locName} Historic Old Town & Heritage Walking Tour`, city: locName, country: ctryName, category: 'Culture', duration: '3 hours', price: 3200, description: `Discover ancient architecture, hidden plazas, and rich local history of ${locName}.`, image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+    { id: `act-gen-2`, name: `${locName} Sunset Panoramic Sightseeing Cruise`, city: locName, country: ctryName, category: 'Sightseeing', duration: '2 hours', price: 4800, description: `Enjoy breathtaking views of ${locName} landmarks as golden hour illuminates the skyline.`, image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+    { id: `act-gen-3`, name: `${locName} Authentic Local Gastronomy Masterclass`, city: locName, country: ctryName, category: 'Food', duration: '2.5 hours', price: 4200, description: `Learn traditional culinary recipes and savor fresh regional specialties of ${ctryName}.`, image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=85', rating: 4.8 },
+    { id: `act-gen-4`, name: `${locName} Scenic Nature Excursion & Viewpoint Hike`, city: locName, country: ctryName, category: 'Nature', duration: '4 hours', price: 5500, description: `Explore lush natural reserves, scenic mountain ridges, and pristine vistas near ${locName}.`, image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=85', rating: 4.9 },
+  ];
+}
+
 export function getMatchingActivitiesForLocation(
   city: string,
   country: string,
@@ -44,19 +103,41 @@ export function getMatchingActivitiesForLocation(
   const normCity = (city || '').toLowerCase();
   const normCountry = (country || '').toLowerCase();
 
-  let matches = (allActivities || []).filter(
-    (a: Activity) =>
-      (a.city && normCity.includes(a.city.toLowerCase())) ||
-      (a.city && a.city.toLowerCase().includes(normCity)) ||
-      (a.country && normCountry.includes(a.country.toLowerCase())) ||
-      (a.country && a.country.toLowerCase().includes(normCountry))
-  );
+  // 1. Search existing seed activities strictly matching city or country
+  let matches = (allActivities || []).filter((a: Activity) => {
+    const actCity = (a.city || '').toLowerCase();
+    const actCountry = (a.country || '').toLowerCase();
 
+    return (
+      (normCity && (actCity.includes(normCity) || normCity.includes(actCity))) ||
+      (normCountry && (actCountry.includes(normCountry) || normCountry.includes(actCountry)))
+    );
+  });
+
+  // 2. If no direct seed matches, generate location-authentic activities specifically for THIS place
   if (matches.length < 2) {
-    matches = [...matches, ...(allActivities || []).slice(0, 4)];
+    const generated = generateDestinationActivities(city, country);
+    matches = [...matches, ...generated];
   }
 
-  const unique = Array.from(new Map(matches.map((a: Activity) => [a.id, a])).values()).slice(0, Math.min(8, Math.max(2, daysCount * 2)));
+  // Guarantee ZERO cross-country contamination
+  const strictPool = matches.filter((a: Activity) => {
+    if (!normCity && !normCountry) return true;
+    const actCity = (a.city || '').toLowerCase();
+    const actCountry = (a.country || '').toLowerCase();
+    return (
+      (normCity && (actCity.includes(normCity) || normCity.includes(actCity))) ||
+      (normCountry && (actCountry.includes(normCountry) || normCountry.includes(actCountry)))
+    );
+  });
+
+  const finalPool = strictPool.length > 0 ? strictPool : generateDestinationActivities(city, country);
+
+  const unique = Array.from(new Map(finalPool.map((a: Activity) => [a.name, a])).values()).slice(
+    0,
+    Math.min(8, Math.max(2, daysCount * 2))
+  );
+
   const times = ['09:30 AM', '02:00 PM', '05:30 PM', '11:00 AM', '03:30 PM'];
 
   return unique.map((act: Activity, index: number) => {
@@ -66,7 +147,7 @@ export function getMatchingActivitiesForLocation(
       ...act,
       id: `act-auto-${Date.now()}-${index}`,
       day,
-      time
+      time,
     };
   });
 }

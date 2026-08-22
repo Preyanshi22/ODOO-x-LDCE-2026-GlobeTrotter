@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StopCard } from '../../components/trips/StopCard';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
-import { useApp, formatDateRange, formatMoney, tripDays } from '../../context/AppContext';
+import { useApp, formatDateRange, formatMoney, tripDays, generateDestinationActivities } from '../../context/AppContext';
 import type { ItinerarySection } from '../../types';
 
 export function TripBuilderPage() {
@@ -479,16 +479,47 @@ export function TripBuilderPage() {
 
       {/* Add Activity Modal */}
       <Modal open={modal === 'activity'} title="Add an experience" onClose={() => setModal(null)}>
-        <p className="modal-copy">Choose something to make {trip.stops.find((stop) => stop.id === stopForActivity)?.city ?? 'this stop'} feel like yours.</p>
-        <div className="modal-activity-list">
-          {activities.slice(0, 5).map((activity) => (
-            <div key={activity.id} className="modal-activity">
-              <img src={activity.image} alt="" />
-              <div><strong>{activity.name}</strong><small>{activity.city} · {formatMoney(activity.price)}</small></div>
-              <Button variant="secondary" onClick={() => { if (stopForActivity) addActivity(trip.id, stopForActivity, activity); setModal(null); }}>Add</Button>
-            </div>
-          ))}
-        </div>
+        {(() => {
+          const currentStopObj = trip.stops.find((s) => s.id === stopForActivity);
+          const stopCity = currentStopObj?.city || '';
+          const stopCountry = currentStopObj?.country || '';
+
+          const matchedSeed = activities.filter((a) => {
+            const actCity = (a.city || '').toLowerCase();
+            const actCountry = (a.country || '').toLowerCase();
+            const sc = stopCity.toLowerCase();
+            const sctry = stopCountry.toLowerCase();
+            return (sc && actCity.includes(sc)) || (sctry && actCountry.includes(sctry));
+          });
+
+          const modalActivities = matchedSeed.length > 0 ? matchedSeed : generateDestinationActivities(stopCity, stopCountry);
+
+          return (
+            <>
+              <p className="modal-copy">Choose an experience curated specifically for <strong>{stopCity || 'this stop'}</strong> ({stopCountry}).</p>
+              <div className="modal-activity-list">
+                {modalActivities.map((activity) => (
+                  <div key={activity.id} className="modal-activity">
+                    <img src={activity.image} alt={activity.name} />
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ display: 'block' }}>{activity.name}</strong>
+                      <small style={{ color: 'var(--ink-muted)' }}>{activity.city} · {formatMoney(activity.price)}</small>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        if (stopForActivity) addActivity(trip.id, stopForActivity, activity);
+                        setModal(null);
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </Modal>
     </div>
   );

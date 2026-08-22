@@ -7,7 +7,7 @@ import { Button } from '../ui/Button';
 import { SafeImage } from '../ui/Image';
 
 export function DestinationCard({ destination, compact = false }: { destination: Destination; compact?: boolean }) {
-  const { trips, selectedTripId, addStop, addToast } = useApp();
+  const { trips, selectedTripId, setSelectedTripId, createTrip, addStop, addToast } = useApp();
   const navigate = useNavigate();
   const [added, setAdded] = useState(false);
 
@@ -17,18 +17,34 @@ export function DestinationCard({ destination, compact = false }: { destination:
     navigate(`/explore?search=${encodeURIComponent(destination.city)}`);
   };
 
-  const handleAddStop = (e: React.MouseEvent) => {
+  const handleAddStop = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const targetTripId = selectedTripId || (trips.length > 0 ? trips[0].id : null);
+    const activeTrip = trips.find((t) => t.id === selectedTripId) || trips[0];
 
-    if (targetTripId) {
-      addStop(targetTripId, destination);
+    if (activeTrip) {
+      addStop(activeTrip.id, destination);
+      setSelectedTripId(activeTrip.id);
+      addToast(`Added ${destination.city} with curated activities to ${activeTrip.name}!`, 'success');
       setAdded(true);
-      addToast(`Added ${destination.city} to your trip route!`, 'success');
       setTimeout(() => setAdded(false), 2500);
+      navigate('/trips');
     } else {
-      addToast(`Starting new trip with ${destination.city}`, 'info');
-      navigate(`/trips/new?destination=${encodeURIComponent(destination.city)}`);
+      const today = new Date();
+      const startDateStr = today.toISOString().slice(0, 10);
+      const nextWeek = new Date(today.getTime() + 7 * 86400000);
+      const endDateStr = nextWeek.toISOString().slice(0, 10);
+
+      const newTrip = await createTrip({
+        name: `${destination.city} Trip`,
+        description: destination.description || `Curated journey through ${destination.city}, ${destination.country}.`,
+        startDate: startDateStr,
+        endDate: endDateStr,
+        cover: destination.image,
+      });
+
+      setSelectedTripId(newTrip.id);
+      addToast(`Created new ${destination.city} trip with curated activities!`, 'success');
+      navigate('/trips');
     }
   };
 
