@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { mockApi } from '../services/mockApi';
-import { api } from '../services/api';
-import type { Activity, CommunityPost, Destination, ItineraryActivity, Stop, ToastMessage, Trip, UserProfile } from '../types';
+import { api, type UserRegisterData } from '../services/api';
+import type { Activity, CommunityPost, Destination, ItineraryActivity, Stop, ToastMessage, Trip, TripStatus, UserProfile } from '../types';
 
 interface AppContextValue {
   trips: Trip[];
@@ -23,15 +23,19 @@ interface AppContextValue {
   addActivity: (tripId: string, stopId: string, activity: Activity) => void;
   removeActivity: (tripId: string, stopId: string, activityId: string) => void;
   updateProfile: (profile: UserProfile) => void;
+  registerUser: (data: UserRegisterData) => Promise<void>;
+  loginUser: (email: string, pass: string) => Promise<void>;
   toggleLike: (postId: string) => void;
   addPost: (post: Omit<CommunityPost, 'id' | 'likes' | 'comments' | 'liked' | 'createdAt'>) => void;
   addToast: (message: string, tone?: ToastMessage['tone']) => void;
   toasts: ToastMessage[];
   dismissToast: (id: string) => void;
+  clearAllUserData: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
 const STORAGE = 'globetrotter-frontend-state';
+const USER_STORAGE = 'gt_active_user';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -45,14 +49,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE);
     const parsed = saved ? (JSON.parse(saved) as Partial<AppContextValue>) : null;
+    const savedUser = window.localStorage.getItem(USER_STORAGE);
+    const currentUserObj = savedUser ? JSON.parse(savedUser) : null;
 
     Promise.all([
-      api.fetchTrips(),
+      api.fetchTrips(currentUserObj?.id || currentUserObj?.email),
       mockApi.destinations.list(),
       mockApi.activities.list(),
-      mockApi.profile.get(),
       mockApi.community.list(),
-    ]).then(([backendTrips, seedDestinations, seedActivities, seedProfile, seedPosts]) => {
+    ]).then(([backendTrips, seedDestinations, seedActivities, seedPosts]) => {
       let finalTrips: Trip[] = [];
       if (backendTrips && backendTrips.length > 0) {
         finalTrips = backendTrips.map((bt: any) => ({
@@ -62,7 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           startDate: bt.start_date || '2026-09-01',
           endDate: bt.end_date || '2026-09-05',
           cover: bt.cover || 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85',
-          status: 'upcoming',
+          status: 'upcoming' as TripStatus,
           createdAt: new Date().toISOString(),
           budget: {
             total: bt.total_budget || 50000,
@@ -99,15 +104,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
       }
 
-      const seedTripsFallback = parsed?.trips && parsed.trips.length > 0 ? parsed.trips : [];
-      const combinedTrips = finalTrips.length > 0 ? finalTrips : seedTripsFallback.length > 0 ? seedTripsFallback : [];
+      let activeProfile: UserProfile = {
+        firstName: 'Guest',
+        lastName: 'User',
+        email: 'guest@globetrotter.app',
+        phone: '',
+        city: 'Explore',
+        country: 'World',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        language: 'English (US)',
+        savedDestinations: [],
+        privacy: 'public',
+      };
 
-      setTrips(combinedTrips);
+      if (currentUserObj) {
+        activeProfile = {
+          firstName: currentUserObj.first_name || currentUserObj.firstName || 'User',
+          lastName: currentUserObj.last_name || currentUserObj.lastName || '',
+          email: currentUserObj.email || '',
+          phone: currentUserObj.phone || '',
+          city: currentUserObj.city || '',
+          country: currentUserObj.country || '',
+          avatar: currentUserObj.profile_photo || activeProfile.avatar,
+          language: 'English (US)',
+          savedDestinations: [],
+          privacy: 'public',
+        };
+      } else if (parsed?.profile) {
+        activeProfile = parsed.profile;
+      }
+
+      setTrips(finalTrips);
       setDestinations(seedDestinations);
       setActivities(seedActivities);
-      setProfile(parsed?.profile ?? seedProfile);
+      setProfile(activeProfile);
       setPosts(seedPosts);
-      setSelectedTripId(parsed?.selectedTripId ?? (combinedTrips[0]?.id ?? ''));
+      setSelectedTripId(finalTrips[0]?.id ?? '');
     });
   }, []);
 
@@ -123,6 +155,90 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismissToast = useCallback((id: string) => setToasts((current) => current.filter((toast) => toast.id !== id)), []);
+
+  const clearAllUserData = useCallback(() => {
+    setTrips([]);
+    window.localStorage.removeItem(STORAGE);
+    window.localStorage.removeItem(USER_STORAGE);
+    sessionStorage.clear();
+    setProfile({
+      firstName: 'Guest',
+      lastName: 'User',
+      email: 'guest@globetrotter.app',
+      phone: '',
+      city: 'Explore',
+      country: 'World',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      language: 'English (US)',
+      savedDestinations: [],
+      privacy: 'public',
+    });
+    addToast('All mock data cleared.', 'info');
+  }, [addToast]);
+
+  const registerUser = useCallback(
+    async (data: UserRegisterData) => {
+      const res = await api.registerUser(data);
+      const u = res.user;
+      const newProfile: UserProfile = {
+        firstName: u.first_name,
+        lastName: u.last_name || '',
+        email: u.email,
+        phone: u.phone || '',
+        city: u.city || '',
+        country: u.country || '',
+        avatar: u.profile_photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        language: 'English (US)',
+        savedDestinations: [],
+        privacy: 'public',
+      };
+      setProfile(newProfile);
+      setTrips([]);
+      window.localStorage.setItem(USER_STORAGE, JSON.stringify(u));
+    },
+    []
+  );
+
+  const loginUser = useCallback(
+    async (email: string, pass: string) => {
+      const res = await api.loginUser({ email, password: pass });
+      const u = res.user;
+      const newProfile: UserProfile = {
+        firstName: u.first_name,
+        lastName: u.last_name || '',
+        email: u.email,
+        phone: u.phone || '',
+        city: u.city || '',
+        country: u.country || '',
+        avatar: u.profile_photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        language: 'English (US)',
+        savedDestinations: [],
+        privacy: 'public',
+      };
+      setProfile(newProfile);
+      window.localStorage.setItem(USER_STORAGE, JSON.stringify(u));
+
+      const userTrips = await api.fetchTrips(u.id || u.email);
+      const formatted: Trip[] = (userTrips || []).map((bt: any) => ({
+        id: bt.id || String(bt._id),
+        name: bt.title || bt.name || 'Untitled Trip',
+        description: bt.description || 'Custom Travel Itinerary',
+        startDate: bt.start_date || '2026-09-01',
+        endDate: bt.end_date || '2026-09-05',
+        cover: bt.cover || 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85',
+        status: 'upcoming' as TripStatus,
+        createdAt: new Date().toISOString(),
+        budget: {
+          total: bt.total_budget || 50000,
+          categories: { Transport: 10000, Accommodation: 20000, Activities: 10000, Meals: 7500, Other: 2500 },
+        },
+        stops: [],
+      }));
+      setTrips(formatted);
+      setSelectedTripId(formatted[0]?.id ?? '');
+    },
+    []
+  );
 
   const updateTrip = useCallback(
     async (updated: Trip) => {
@@ -144,9 +260,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const createTrip = useCallback(
     async (input: Pick<Trip, 'name' | 'description' | 'startDate' | 'endDate' | 'cover'>) => {
       let createdId = `trip-${Date.now()}`;
+      const savedUserStr = window.localStorage.getItem(USER_STORAGE);
+      const currentUser = savedUserStr ? JSON.parse(savedUserStr) : null;
+      const user_id = currentUser?.id || profile?.email || 'user_guest';
+
       try {
         const backendRes = await api.createTrip({
           title: input.name,
+          user_id,
           start_date: input.startDate,
           end_date: input.endDate,
           total_budget: 50000,
@@ -174,7 +295,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addToast('Your new trip has been created and saved.', 'success');
       return trip;
     },
-    [addToast]
+    [addToast, profile?.email]
   );
 
   const deleteTrip = useCallback(
@@ -360,11 +481,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addActivity,
       removeActivity,
       updateProfile: setProfile,
+      registerUser,
+      loginUser,
       toggleLike,
       addPost,
       addToast,
       toasts,
       dismissToast,
+      clearAllUserData,
     }),
     [
       trips,
@@ -384,11 +508,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       moveStop,
       addActivity,
       removeActivity,
+      registerUser,
+      loginUser,
       toggleLike,
       addPost,
       addToast,
       toasts,
       dismissToast,
+      clearAllUserData,
     ]
   );
 

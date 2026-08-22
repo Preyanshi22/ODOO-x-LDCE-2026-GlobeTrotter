@@ -4,13 +4,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { useApp } from '../../context/AppContext';
 import { AuthLayout } from './AuthLayout';
-import { api } from '../../services/api';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { addToast } = useApp();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { addToast, loginUser } = useApp();
+  const [email, setEmail] = useState('aarav@globetrotter.app');
+  const [password, setPassword] = useState('password123');
   const [show, setShow] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,19 +18,17 @@ export function LoginPage() {
     event.preventDefault();
     if (!email.includes('@')) return setError('Enter a valid email address.');
     if (password.length < 6) return setError('Password must be at least 6 characters.');
-    
     setError('');
     setLoading(true);
 
     try {
-      const userData = await api.loginUser({ email, password });
-      localStorage.setItem('user', JSON.stringify(userData));
-      addToast(`Welcome back, ${userData.name}!`, 'success');
+      await loginUser(email, password);
+      setLoading(false);
+      addToast('Welcome back to GlobeTrotter!');
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
-    } finally {
       setLoading(false);
+      setError(err.message || 'Invalid email or password.');
     }
   };
 
@@ -41,9 +38,8 @@ export function LoginPage() {
         <div className="auth-heading">
           <span className="eyebrow">Welcome back</span>
           <h1>Pick up where<br /><em>you left off.</em></h1>
-          <p>Sign in to keep planning your next escape.</p>
+          <p>Sign in to keep planning your next beautiful escape.</p>
         </div>
-
         <form className="auth-form" onSubmit={submit} noValidate>
           <div className="field">
             <label htmlFor="login-email">Email address</label>
@@ -56,14 +52,13 @@ export function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
-                required
               />
             </div>
           </div>
-
           <div className="field">
             <div className="field-label-row">
               <label htmlFor="login-password">Password</label>
+              <Link to="/forgot-password">Forgot password?</Link>
             </div>
             <div className="input-icon">
               <LockKeyhole size={17} />
@@ -74,7 +69,6 @@ export function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
                 autoComplete="current-password"
-                required
               />
               <button
                 type="button"
@@ -86,19 +80,29 @@ export function LoginPage() {
               </button>
             </div>
           </div>
-
-          {error && <p className="form-error" role="alert" style={{ color: '#ef4444', fontSize: '0.875rem' }}>{error}</p>}
-
+          {error && <p className="form-error" role="alert">{error}</p>}
           <Button className="button-large button-wide" type="submit" loading={loading}>
-            {loading ? 'Signing you in...' : 'Sign in'} {!loading && <span>?</span>}
+            {loading ? 'Signing you in...' : 'Sign in'} {!loading && <span>→</span>}
           </Button>
+          <div className="auth-divider">
+            <span>or continue with</span>
+          </div>
+          <button
+            type="button"
+            className="social-button"
+            onClick={() => {
+              addToast('Google sign-in selected.', 'info');
+              navigate('/');
+            }}
+          >
+            <span className="google-mark">G</span> Continue with Google
+          </button>
         </form>
-
         <p className="auth-switch">
           New to GlobeTrotter? <Link to="/register">Create an account</Link>
         </p>
         <p className="secure-note">
-          <CheckCircle2 size={15} /> Authenticated securely with MongoDB.
+          <CheckCircle2 size={15} /> By continuing, you agree to our Terms and Privacy Policy.
         </p>
       </div>
     </AuthLayout>

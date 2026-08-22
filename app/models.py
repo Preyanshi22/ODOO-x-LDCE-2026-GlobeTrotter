@@ -38,3 +38,18 @@ class AIGenerateRequest(BaseModel):
     days: int = Field(default=5, ge=1, le=30)
     budget: float = Field(default=50000.0, ge=0)
     travel_style: str = "balanced"
+
+class UserRegister(BaseModel):
+    first_name: str
+    last_name: Optional[str] = ""
+    email: str
+    phone: Optional[str] = ""
+    city: Optional[str] = ""
+    country: Optional[str] = ""
+    password: str
+    profile_photo: Optional[str] = ""
+    additional_info: Optional[str] = ""
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
