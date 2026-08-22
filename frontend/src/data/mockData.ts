@@ -593,39 +593,123 @@ export const initialPosts: CommunityPost[] = [
   {
     id: 'post-1',
     user: 'Maya Chen',
-    avatar: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=85',
     destination: 'Kyoto, Japan',
-    tripName: 'The quiet side of Japan',
-    body: 'The best travel days are the ones with room to get a little lost. Found this tiny tea house behind Gion and stayed for three hours.',
+    tripName: 'Zen Temples & Quiet Gardens',
+    body: 'The best travel days are the ones with room to get a little lost. Found this tiny wooden tea house tucked behind Gion and spent three peaceful hours drinking matcha.',
     image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=85',
-    likes: 128,
-    comments: 18,
-    createdAt: '2h ago'
+    likes: 142,
+    comments: 19,
+    createdAt: '2 hours ago'
   },
   {
     id: 'post-2',
     user: 'Luca Rossi',
-    avatar: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=85',
     destination: 'Amalfi Coast, Italy',
-    tripName: 'Postcards from the coast',
-    body: 'A slow afternoon in Ravello, lemon granita in hand. Saving this one for the days I need a little sunshine.',
+    tripName: 'Postcards from the Tyrrhenian',
+    body: 'A slow afternoon in Ravello, freshly squeezed lemon granita in hand. Saving this view for the days I need a little European sunshine.',
     image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=85',
-    likes: 94,
-    comments: 11,
-    createdAt: '1d ago'
+    likes: 98,
+    comments: 12,
+    createdAt: '5 hours ago'
   },
   {
     id: 'post-3',
     user: 'Sofia Williams',
-    avatar: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=85',
     destination: 'Marrakech, Morocco',
-    tripName: 'A color study',
-    body: 'Every corner is a different shade of warm. Three days here was not nearly enough.',
+    tripName: 'Souks & Terracotta Courtyards',
+    body: 'Every alleyway in the Medina is a different shade of warm terracotta. Ended the day with eucalyptus hammam baths and mint tea on a rooftop.',
     image: 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=800&q=85',
-    likes: 76,
-    comments: 9,
-    createdAt: '3d ago'
+    likes: 85,
+    comments: 8,
+    createdAt: '1 day ago'
   },
+  {
+    id: 'post-4',
+    user: 'Kenji Sato',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=85',
+    destination: 'Honolulu, Hawaii',
+    tripName: 'Pacific Swells & Diamond Head',
+    body: 'Golden hour surf session along Waikiki Beach followed by a sunset helicopter ride over the volcanic crater. Oahu is magic.',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=85',
+    likes: 176,
+    comments: 24,
+    createdAt: '1 day ago'
+  },
+  {
+    id: 'post-5',
+    user: 'Elena Rostova',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=85',
+    destination: 'Interlaken, Switzerland',
+    tripName: 'Swiss Alps & Glacier Peaks',
+    body: 'Riding the open-window alpine train up to Kleine Scheidegg surrounded by snow-covered peaks. Breathing in crisp mountain air.',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=85',
+    likes: 210,
+    comments: 31,
+    createdAt: '2 days ago'
+  },
+  {
+    id: 'post-6',
+    user: 'Amara Okafor',
+    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=300&q=85',
+    destination: 'Reykjavik, Iceland',
+    tripName: 'Aurora Borealis & Hot Springs',
+    body: 'Soaking in the warm silica geothermal waters of the Blue Lagoon, then driving out into the Arctic night to catch green Northern Lights dancing in the sky.',
+    image: 'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=800&q=85',
+    likes: 189,
+    comments: 27,
+    createdAt: '2 days ago'
+  },
+  {
+    id: 'post-7',
+    user: 'Oliver Taylor',
+    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=300&q=85',
+    destination: 'Santorini, Greece',
+    tripName: 'Oia Caldera Sunsets',
+    body: 'White-washed stone staircases and blue domes overlooking the Aegean sea. Watching the sunset with grilled octopus and local Assyrtiko wine.',
+    image: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=85',
+    likes: 154,
+    comments: 16,
+    createdAt: '3 days ago'
+  },
+  {
+    id: 'post-8',
+    user: 'Priya Patel',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=85',
+    destination: 'Bali, Indonesia',
+    tripName: 'Nusa Penida & Manta Coves',
+    body: 'Catamaran cruise to Nusa Penida coves. Swimming alongside gentle 3-meter manta rays in turquoise waters was a bucket-list memory.',
+    image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=85',
+    likes: 162,
+    comments: 22,
+    createdAt: '4 days ago'
+  },
+  {
+    id: 'post-9',
+    user: 'Mateo Hernandez',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=300&q=85',
+    destination: 'Cusco, Peru',
+    tripName: 'Incan Citadel Expedition',
+    body: 'First sight of Machu Picchu as the morning mist lifted over the Sacred Valley. Ancient stone masonry against sheer green peaks.',
+    image: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=800&q=85',
+    likes: 135,
+    comments: 15,
+    createdAt: '5 days ago'
+  },
+  {
+    id: 'post-10',
+    user: 'Isla MacLeod',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=85',
+    destination: 'Queenstown, New Zealand',
+    tripName: 'Alpine Fiord Cruise',
+    body: 'Cruising through Milford Sound past towering granite cliffs and waterfalls misting over the deck. Pure pristine nature.',
+    image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=800&q=85',
+    likes: 147,
+    comments: 18,
+    createdAt: '6 days ago'
+  }
 ];
 
 export const analytics = {

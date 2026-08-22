@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { mockApi } from '../services/mockApi';
-import { initialTrips } from '../data/mockData';
+import { initialPosts, initialTrips } from '../data/mockData';
 import { api, type UserRegisterData } from '../services/api';
 import { supabaseAuth } from '../services/supabaseAuth';
 import type { Activity, Budget, CommunityPost, Destination, ItineraryActivity, Stop, ToastMessage, Trip, TripStatus, UserProfile } from '../types';
@@ -33,6 +33,42 @@ interface AppContextValue {
   toasts: ToastMessage[];
   dismissToast: (id: string) => void;
   clearAllUserData: () => void;
+}
+
+export function getMatchingActivitiesForLocation(
+  city: string,
+  country: string,
+  daysCount: number,
+  allActivities: Activity[]
+): ItineraryActivity[] {
+  const normCity = (city || '').toLowerCase();
+  const normCountry = (country || '').toLowerCase();
+
+  let matches = (allActivities || []).filter(
+    (a: Activity) =>
+      (a.city && normCity.includes(a.city.toLowerCase())) ||
+      (a.city && a.city.toLowerCase().includes(normCity)) ||
+      (a.country && normCountry.includes(a.country.toLowerCase())) ||
+      (a.country && a.country.toLowerCase().includes(normCountry))
+  );
+
+  if (matches.length < 2) {
+    matches = [...matches, ...(allActivities || []).slice(0, 4)];
+  }
+
+  const unique = Array.from(new Map(matches.map((a: Activity) => [a.id, a])).values()).slice(0, Math.min(8, Math.max(2, daysCount * 2)));
+  const times = ['09:30 AM', '02:00 PM', '05:30 PM', '11:00 AM', '03:30 PM'];
+
+  return unique.map((act: Activity, index: number) => {
+    const day = (index % Math.max(1, daysCount)) + 1;
+    const time = times[index % times.length];
+    return {
+      ...act,
+      id: `act-auto-${Date.now()}-${index}`,
+      day,
+      time
+    };
+  });
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -153,26 +189,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeProfile = parsed.profile;
       }
 
-      const initialPosts: CommunityPost[] = backendPosts && backendPosts.length > 0 ? backendPosts : [
-        {
-          id: 'post-1',
-          user: 'Aarav Mehta',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-          destination: 'Kyoto, Japan',
-          tripName: 'Zen Temples & Gardens',
-          body: 'Morning light filtering through the Bamboo Grove in Arashiyama. Pure serenity before the crowds arrive.',
-          image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80',
-          likes: 38,
-          comments: 6,
-          createdAt: '2 hours ago',
-        }
-      ];
+      const communityPosts: CommunityPost[] = backendPosts && backendPosts.length > 0 ? backendPosts : initialPosts;
 
       setTrips(finalTrips);
       setDestinations(seedDestinations);
       setActivities(seedActivities);
       setProfile(activeProfile);
-      setPosts(initialPosts);
+      setPosts(communityPosts);
       setSelectedTripId(parsed?.selectedTripId || finalTrips[0]?.id || '');
     });
   }, []);
@@ -319,7 +342,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const currentUser = savedUserStr ? JSON.parse(savedUserStr) : null;
       const user_id = currentUser?.id || profile?.email || 'user_guest';
 
+      const daysCount = Math.max(1, Math.round((new Date(input.endDate).getTime() - new Date(input.startDate).getTime()) / 86400000) + 1);
       const placeBudget = calculateTripBudget(input.name + ' ' + (input.description || ''), input.startDate, input.endDate);
+
+      // Auto-populate location activities for the trip
+      const autoActivities = getMatchingActivitiesForLocation(input.name, input.description || '', daysCount, activities);
+      const autoActivitiesSum = autoActivities.reduce((sum: number, a: ItineraryActivity) => sum + (a.price || 0), 0);
+
+      const autoStops: Stop[] = [
+        {
+          id: `stop-${Date.now()}-0`,
+          city: input.name,
+          country: input.description || 'Destination',
+          arrival: input.startDate,
+          departure: input.endDate,
+          image: input.cover,
+          activities: autoActivities,
+        },
+      ];
+
+      const updatedCategories = {
+        ...placeBudget.categories,
+        Activities: Math.max(placeBudget.categories.Activities, autoActivitiesSum),
+      };
+      const totalBudget = Object.values(updatedCategories).reduce((a, b) => a + b, 0);
 
       try {
         const backendRes = await api.createTrip({
@@ -327,7 +373,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           user_id,
           start_date: input.startDate,
           end_date: input.endDate,
-          total_budget: placeBudget.total,
+          total_budget: totalBudget,
           stops: [{ city_name: input.name, start_date: input.startDate, end_date: input.endDate }],
         });
         if (backendRes?.id) createdId = backendRes.id;
@@ -340,16 +386,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: createdId,
         status: 'upcoming',
         createdAt: new Date().toISOString(),
-        budget: placeBudget,
-        stops: [],
+        budget: { total: totalBudget, categories: updatedCategories },
+        stops: autoStops,
       };
 
       setTrips((current) => [trip, ...current]);
       setSelectedTripId(trip.id);
-      addToast('Your new trip has been created and saved.', 'success');
+      addToast(`Trip created with ${autoActivities.length} curated activities!`, 'success');
       return trip;
     },
-    [addToast, profile?.email]
+    [activities, addToast, profile?.email]
   );
 
   const deleteTrip = useCallback(
@@ -374,6 +420,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const last = trip.stops[trip.stops.length - 1];
           const arrival = last?.departure ?? trip.startDate;
           const departure = last?.departure ?? trip.endDate;
+          const daysCount = tripDays(trip);
+
+          const autoActivities = getMatchingActivitiesForLocation(destination.city, destination.country, daysCount, activities);
+
           const stop: Stop = {
             id: `stop-${Date.now()}`,
             city: destination.city,
@@ -381,14 +431,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
             arrival,
             departure,
             image: destination.image,
-            activities: [],
+            activities: autoActivities,
           };
-          return { ...trip, stops: [...trip.stops, stop] };
+
+          const newStops = [...trip.stops, stop];
+          const allActsCost = newStops.flatMap((s) => s.activities).reduce((sum, a) => sum + (a.price || 0), 0);
+          const updatedCategories = {
+            ...trip.budget.categories,
+            Activities: Math.max(trip.budget.categories.Activities, allActsCost),
+          };
+          const totalBudget = Object.values(updatedCategories).reduce((a, b) => a + b, 0);
+
+          return {
+            ...trip,
+            budget: { total: totalBudget, categories: updatedCategories },
+            stops: newStops,
+          };
         })
       );
-      addToast(`${destination.city} added to your route.`, 'success');
+      addToast(`${destination.city} and curated experiences added to your route!`, 'success');
     },
-    [addToast]
+    [activities, addToast]
   );
 
   const copyTrip = useCallback(
@@ -428,7 +491,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeStop = useCallback(
     (tripId: string, stopId: string) => {
       setTrips((current) =>
-        current.map((trip) => (trip.id === tripId ? { ...trip, stops: trip.stops.filter((stop) => stop.id !== stopId) } : trip))
+        current.map((trip) => {
+          if (trip.id !== tripId) return trip;
+          const newStops = trip.stops.filter((stop) => stop.id !== stopId);
+          const allActsCost = newStops.flatMap((s) => s.activities).reduce((sum, a) => sum + (a.price || 0), 0);
+          const updatedCategories = {
+            ...trip.budget.categories,
+            Activities: Math.max(0, allActsCost),
+          };
+          const totalBudget = Object.values(updatedCategories).reduce((a, b) => a + b, 0);
+
+          return {
+            ...trip,
+            stops: newStops,
+            budget: { total: totalBudget, categories: updatedCategories },
+          };
+        })
       );
       addToast('Stop removed from your route.', 'info');
     },
@@ -452,44 +530,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addActivity = useCallback(
     (tripId: string, stopId: string, activity: Activity) => {
       setTrips((current) =>
-        current.map((trip) =>
-          trip.id === tripId
-            ? {
-                ...trip,
-                stops: trip.stops.map((stop) =>
-                  stop.id === stopId
-                    ? {
-                        ...stop,
-                        activities: [
-                          ...stop.activities,
-                          { ...activity, id: `${activity.id}-${Date.now()}`, day: 1, time: '10:00' },
-                        ],
-                      }
-                    : stop
-                ),
-              }
-            : trip
-        )
+        current.map((trip) => {
+          if (trip.id !== tripId) return trip;
+          const newStops = trip.stops.map((stop) =>
+            stop.id === stopId
+              ? {
+                  ...stop,
+                  activities: [
+                    ...stop.activities,
+                    { ...activity, id: `${activity.id}-${Date.now()}`, day: 1, time: '10:00 AM' },
+                  ],
+                }
+              : stop
+          );
+          const allActsCost = newStops.flatMap((s) => s.activities).reduce((sum, a) => sum + (a.price || 0), 0);
+          const updatedCategories = {
+            ...trip.budget.categories,
+            Activities: Math.max(0, allActsCost),
+          };
+          const totalBudget = Object.values(updatedCategories).reduce((a, b) => a + b, 0);
+
+          return {
+            ...trip,
+            stops: newStops,
+            budget: { total: totalBudget, categories: updatedCategories },
+          };
+        })
       );
       addToast(`${activity.name} added to your itinerary.`, 'success');
     },
     [addToast]
   );
 
-  const removeActivity = useCallback((tripId: string, stopId: string, activityId: string) => {
-    setTrips((current) =>
-      current.map((trip) =>
-        trip.id === tripId
-          ? {
-              ...trip,
-              stops: trip.stops.map((stop) =>
-                stop.id === stopId ? { ...stop, activities: stop.activities.filter((act) => act.id !== activityId) } : stop
-              ),
-            }
-          : trip
-      )
-    );
-  }, []);
+  const removeActivity = useCallback(
+    (tripId: string, stopId: string, activityId: string) => {
+      setTrips((current) =>
+        current.map((trip) => {
+          if (trip.id !== tripId) return trip;
+          const newStops = trip.stops.map((stop) =>
+            stop.id === stopId ? { ...stop, activities: stop.activities.filter((act) => act.id !== activityId) } : stop
+          );
+          const allActsCost = newStops.flatMap((s) => s.activities).reduce((sum, a) => sum + (a.price || 0), 0);
+          const updatedCategories = {
+            ...trip.budget.categories,
+            Activities: Math.max(0, allActsCost),
+          };
+          const totalBudget = Object.values(updatedCategories).reduce((a, b) => a + b, 0);
+
+          return {
+            ...trip,
+            stops: newStops,
+            budget: { total: totalBudget, categories: updatedCategories },
+          };
+        })
+      );
+      addToast('Activity removed.', 'info');
+    },
+    [addToast]
+  );
 
   const toggleLike = useCallback(
     (postId: string) =>
