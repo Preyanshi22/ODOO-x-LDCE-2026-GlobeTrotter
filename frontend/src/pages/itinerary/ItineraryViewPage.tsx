@@ -1,4 +1,4 @@
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock3, Copy, MapPin, Printer, Share2, Train, Utensils, Wallet, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock3, Copy, MapPin, Printer, Share2, Train, Utensils, Wallet, X, CircleDollarSign } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Badge } from '../../components/ui/Badge';
@@ -31,7 +31,7 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
         <SafeImage src={trip.cover} alt={trip.name} />
         <div className="itinerary-cover-overlay">
           <div>
-            <span className="eyebrow light">{shared ? 'A shared journey' : 'Your finished itinerary'}</span>
+            <span className="eyebrow light">{shared ? 'A shared journey' : 'Screen 9: Itinerary for a selected place'}</span>
             <h1>{trip.name}</h1>
             <p>{trip.stops.map((stop) => stop.city).join('  ·  ') || 'A journey waiting to happen'} <span>•</span> {formatDateRange(trip.startDate, trip.endDate)}</p>
           </div>
@@ -131,7 +131,7 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
         <main className={`day-itinerary ${mode}`}>
           <div className="day-title-row">
             <div>
-              <span className="eyebrow">Day {String(day).padStart(2, '0')}</span>
+              <span className="eyebrow">Itinerary for a selected place (Screen 9) · Day {String(day).padStart(2, '0')}</span>
               <h2>{dayLabel(trip, day)}</h2>
               <p className="muted">{dayActivities.length ? `${dayActivities.length} moments planned` : 'A little room for spontaneity'}</p>
             </div>
@@ -148,29 +148,51 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
             <span>{dayActivities[0]?.stop.country ?? 'Explore at your own pace'}</span>
           </div>
 
+          {/* Screen 9: Physical Activity & Expense Breakdown Side-by-Side */}
           {dayActivities.length ? (
-            <div className="activity-timeline">
-              {dayActivities.sort((a, b) => a.time.localeCompare(b.time)).map((item) => (
-                <div className="timeline-item" key={item.id}>
-                  <div className="timeline-time">{item.time}<small>{item.duration}</small></div>
-                  <div className="timeline-rail"><span /><i /></div>
-                  <article className="timeline-card">
-                    <SafeImage src={item.image} alt={item.name} />
-                    <div>
-                      <div className="timeline-card-top">
-                        <Badge tone="amber">{item.category}</Badge>
-                        <span>{formatMoney(item.price)} / person</span>
+            <div>
+              <div className="activity-timeline">
+                {dayActivities.sort((a, b) => a.time.localeCompare(b.time)).map((item) => (
+                  <div className="timeline-item" key={item.id}>
+                    <div className="timeline-time">{item.time}<small>{item.duration}</small></div>
+                    <div className="timeline-rail"><span /><i /></div>
+                    <article className="timeline-card">
+                      <SafeImage src={item.image} alt={item.name} />
+                      <div>
+                        <div className="timeline-card-top">
+                          <Badge tone="amber">{item.category}</Badge>
+                          <span>{formatMoney(item.price)} / person</span>
+                        </div>
+                        <h3>{item.name}</h3>
+                        <p>{item.description}</p>
+                        <div className="timeline-extra">
+                          <span><Clock3 size={13} /> {item.duration}</span>
+                          <span><MapPin size={13} /> {item.stop.city}</span>
+                        </div>
                       </div>
-                      <h3>{item.name}</h3>
-                      <p>{item.description}</p>
-                      <div className="timeline-extra">
-                        <span><Clock3 size={13} /> {item.duration}</span>
-                        <span><MapPin size={13} /> {item.stop.city}</span>
-                      </div>
+                    </article>
+                  </div>
+                ))}
+              </div>
+
+              {/* Screen 9 Expense Line Items Table */}
+              <div style={{ marginTop: '28px', padding: '20px', borderRadius: '14px', background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CircleDollarSign size={18} color="#d97706" /> Day {day} Expense Breakdown
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {dayActivities.map((act) => (
+                    <div key={act.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', padding: '6px 0', borderBottom: '1px dashed #e5e7eb' }}>
+                      <span><strong>Physical Activity:</strong> {act.name} ({act.category})</span>
+                      <strong style={{ color: '#059669' }}>{formatMoney(act.price)}</strong>
                     </div>
-                  </article>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 700, paddingTop: '8px', color: '#111827' }}>
+                    <span>Total Day {day} Expense</span>
+                    <span style={{ color: '#d97706' }}>{formatMoney(dayActivities.reduce((sum, a) => sum + a.price, 0))}</span>
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
           ) : (
             <div className="day-empty">

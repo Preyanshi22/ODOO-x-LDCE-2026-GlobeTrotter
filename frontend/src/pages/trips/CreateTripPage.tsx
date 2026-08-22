@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Image as ImageIcon, Sparkles, Wand2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, Check, Image as ImageIcon, Sparkles, Wand2, Plus } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -8,7 +8,7 @@ import { api } from '../../services/api';
 const defaultCover = 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85';
 
 export function CreateTripPage() {
-  const { createTrip, addToast } = useApp();
+  const { createTrip, destinations, activities, addToast } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', startDate: '', endDate: '', description: '', cover: defaultCover });
   const [error, setError] = useState('');
@@ -66,17 +66,48 @@ export function CreateTripPage() {
       <Link to="/trips" className="back-link"><ArrowLeft size={16} /> Back to my trips</Link>
       <div className="create-trip-layout">
         <div className="create-trip-copy">
-          <span className="eyebrow">A blank canvas</span>
+          <span className="eyebrow">Plan a new trip (Screen 4)</span>
           <h1>Where will your<br /><em>story take you?</em></h1>
-          <p>Start with the basics or use AI to generate your complete route & itinerary instantly.</p>
+          <p>Select your dates, destination, and pick from suggested places to visit and activities.</p>
+          
           <div className="creation-progress">
-            <div className="progress-step active"><span>01</span><div><strong>Trip details</strong><small>Name your adventure</small></div></div>
+            <div className="progress-step active"><span>01</span><div><strong>Trip details</strong><small>Name & dates</small></div></div>
             <div className="progress-line" />
-            <div className="progress-step"><span>02</span><div><strong>Destinations</strong><small>Shape your route</small></div></div>
+            <div className="progress-step"><span>02</span><div><strong>Destinations</strong><small>Places to visit</small></div></div>
             <div className="progress-line" />
-            <div className="progress-step"><span>03</span><div><strong>Experiences</strong><small>Fill the days</small></div></div>
-            <div className="progress-line" />
-            <div className="progress-step"><span>04</span><div><strong>Review</strong><small>Make it yours</small></div></div>
+            <div className="progress-step"><span>03</span><div><strong>Experiences</strong><small>Suggested activities</small></div></div>
+          </div>
+
+          {/* Screen 4: Suggestion for Places to Visit / Activities to perform */}
+          <div style={{ marginTop: '32px' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '12px', color: '#111827' }}>
+              Suggested Places & Activities
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              {destinations.slice(0, 4).map((dest) => (
+                <div
+                  key={dest.id}
+                  onClick={() => setForm((prev) => ({ ...prev, name: dest.city, cover: dest.image }))}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '12px',
+                    background: '#ffffff',
+                    border: form.name === dest.city ? '2px solid #d97706' : '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <img src={dest.image} alt={dest.city} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover' }} />
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.85rem' }}>{dest.city}</strong>
+                    <small style={{ color: '#6b7280', fontSize: '0.72rem' }}>{dest.country}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -84,14 +115,14 @@ export function CreateTripPage() {
           <div className="form-card-heading">
             <div className="form-icon"><Sparkles size={20} /></div>
             <div>
-              <h2>Tell us about the trip</h2>
-              <p>A few details to give it shape, or let AI design it for you.</p>
+              <h2>Plan a new trip</h2>
+              <p>Fill in your itinerary parameters or auto-generate with AI.</p>
             </div>
           </div>
 
           <div className="field">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <label htmlFor="trip-name" style={{ margin: 0 }}>Trip name / Destination <i>*</i></label>
+              <label htmlFor="trip-name" style={{ margin: 0 }}>Select a Place / Trip Name <i>*</i></label>
               <button
                 type="button"
                 onClick={handleAIGenerate}
@@ -109,42 +140,39 @@ export function CreateTripPage() {
                 }}
               >
                 <Wand2 size={13} />
-                {aiGenerating ? 'Generating with AI...' : '✦ Auto-Generate with AI'}
+                {aiGenerating ? 'Generating...' : '✦ Auto-Generate with AI'}
               </button>
             </div>
-            <input id="trip-name" value={form.name} onChange={set('name')} placeholder="e.g. Japanese Odyssey or Paris Escape" autoFocus />
-            <small>Give it a name or destination you'll be happy to see in your calendar.</small>
+            <input id="trip-name" value={form.name} onChange={set('name')} placeholder="e.g. Kyoto, Paris, or Mediterranean Summer" autoFocus />
+            <small>Type a destination name or pick from the suggested places on the left.</small>
           </div>
 
           <div className="form-grid form-grid-two">
             <div className="field">
-              <label htmlFor="start-date">Start date <i>*</i></label>
+              <label htmlFor="start-date">Start Date <i>*</i></label>
               <div className="input-icon"><CalendarDays size={16} /><input id="start-date" type="date" value={form.startDate} onChange={set('startDate')} /></div>
             </div>
             <div className="field">
-              <label htmlFor="end-date">End date <i>*</i></label>
+              <label htmlFor="end-date">End Date <i>*</i></label>
               <div className="input-icon"><CalendarDays size={16} /><input id="end-date" type="date" value={form.endDate} onChange={set('endDate')} /></div>
             </div>
           </div>
 
           <div className="field">
-            <label htmlFor="trip-description">A short description</label>
-            <textarea id="trip-description" value={form.description} onChange={set('description')} placeholder="What are you hoping to feel, taste, or discover?" rows={4} />
-            <span className="field-count">{form.description.length}/180</span>
+            <label htmlFor="trip-description">Short Description & Details</label>
+            <textarea id="trip-description" value={form.description} onChange={set('description')} placeholder="What experiences or places are you planning to visit?" rows={3} />
           </div>
 
           <div className="field">
-            <label htmlFor="trip-cover">Cover image</label>
+            <label htmlFor="trip-cover">Cover Image URL</label>
             <div className="input-icon"><ImageIcon size={16} /><input id="trip-cover" value={form.cover.startsWith('data:') ? '' : form.cover} onChange={set('cover')} placeholder="Paste an Unsplash image URL" /></div>
-            <label className="file-upload"><ImageIcon size={15} /><span>Or upload from your device</span><input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => setForm((current) => ({ ...current, cover: String(reader.result) })); reader.readAsDataURL(file); }} /></label>
-            <div className="cover-preview"><img src={form.cover || defaultCover} alt="Trip cover preview" onError={(event) => { event.currentTarget.src = defaultCover; }} /><span>Preview</span></div>
           </div>
 
           {error && <p className="form-error" role="alert">{error}</p>}
 
           <div className="form-submit-row">
-            <span><Check size={15} /> You can edit everything later</span>
-            <Button type="submit" loading={loading}>{loading ? 'Creating your trip' : 'Create trip'} {!loading && <ArrowRight size={16} />}</Button>
+            <span><Check size={15} /> All details can be edited later</span>
+            <Button type="submit" loading={loading}>{loading ? 'Creating trip...' : 'Create Trip & Build Itinerary'} {!loading && <ArrowRight size={16} />}</Button>
           </div>
         </form>
       </div>
