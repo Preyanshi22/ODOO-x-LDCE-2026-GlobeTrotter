@@ -1,14 +1,21 @@
 import os
-from dotenv import load_dotenv
+import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
 
 load_dotenv()
 
-DEFAULT_MONGO_URI = "mongodb+srv://adhikarinitya09_db_user:HackathonPass2026@cluster0.wvaekeq.mongodb.net/globetrotter?retryWrites=true&w=majority&authSource=admin"
-MONGO_URI = os.getenv("MONGO_URI", DEFAULT_MONGO_URI)
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+DB_NAME = os.getenv("DB_NAME", "globetrotter")
 
-client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-db = client["globetrotter"]
+client = AsyncIOMotorClient(
+    MONGO_URI,
+    tlsCAFile=certifi.where(),
+    tls=True,
+    tlsAllowInvalidCertificates=True
+)
+database = client[DB_NAME]
 
-trips_collection = db["trips"]
-catalog_collection = db["city_catalog"]
+trips_collection = database.get_collection("trips")
+catalog_collection = database.get_collection("catalog")
+users_collection = database.get_collection("users")

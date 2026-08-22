@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = '/api';
 
 export interface TripApiData {
   id?: string;
@@ -22,12 +22,38 @@ export interface AIGenerateRequest {
 export const api = {
   async health(): Promise<{ status: string }> {
     try {
-      const res = await fetch('http://localhost:8000/health');
+      const res = await fetch('/health');
       if (!res.ok) throw new Error('Health check failed');
       return await res.json();
     } catch {
       return { status: 'offline' };
     }
+  },
+
+  async registerUser(data: { name: string; email: string; password: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Registration failed');
+    }
+    return await res.json();
+  },
+
+  async loginUser(credentials: { email: string; password: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Invalid email or password');
+    }
+    return await res.json();
   },
 
   async fetchTrips(): Promise<any[]> {
@@ -97,5 +123,5 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to generate AI itinerary');
     return await res.json();
-  },
+  }
 };
