@@ -19,6 +19,18 @@ export interface AIGenerateRequest {
   travel_style: string;
 }
 
+export interface UserRegisterData {
+  first_name: string;
+  last_name?: string;
+  email: string;
+  phone?: string;
+  city?: string;
+  country?: string;
+  password: string;
+  profile_photo?: string;
+  additional_info?: string;
+}
+
 export const api = {
   async health(): Promise<{ status: string }> {
     try {
@@ -30,9 +42,46 @@ export const api = {
     }
   },
 
-  async fetchTrips(): Promise<any[]> {
+  async registerUser(data: UserRegisterData): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Registration failed' }));
+      throw new Error(err.detail || 'Registration failed');
+    }
+    return await res.json();
+  },
+
+  async loginUser(credentials: { email: string; password: string }): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Invalid credentials' }));
+      throw new Error(err.detail || 'Invalid email or password');
+    }
+    return await res.json();
+  },
+
+  async fetchUserProfile(email: string): Promise<any> {
     try {
-      const res = await fetch(`${API_BASE_URL}/trips`);
+      const res = await fetch(`${API_BASE_URL}/auth/me?email=${encodeURIComponent(email)}`);
+      if (!res.ok) throw new Error('Profile fetch failed');
+      return await res.json();
+    } catch {
+      return null;
+    }
+  },
+
+  async fetchTrips(userId?: string): Promise<any[]> {
+    try {
+      const url = userId ? `${API_BASE_URL}/trips?user_id=${encodeURIComponent(userId)}` : `${API_BASE_URL}/trips`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch trips');
       return await res.json();
     } catch (err) {

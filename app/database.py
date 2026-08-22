@@ -12,3 +12,4 @@ db = client["globetrotter"]
 
 trips_collection = db["trips"]
 catalog_collection = db["city_catalog"]
+users_collection = db["users"]

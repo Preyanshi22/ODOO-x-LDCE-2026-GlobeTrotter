@@ -2,19 +2,19 @@ import os
 import json
 import httpx
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.encoders import jsonable_encoder
 from bson import ObjectId
-from app.database import trips_collection, catalog_collection
-from app.models import TripCreate, TripUpdate, Activity, AIGenerateRequest
+from app.database import trips_collection, catalog_collection, users_collection
+from app.models import TripCreate, TripUpdate, Activity, AIGenerateRequest, UserRegister, UserLogin
 
 app = FastAPI(
     title="GlobeTrotter API",
     description="Backend service for luxury travel planning, budget management, and AI itinerary generation.",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 app.add_middleware(
@@ -25,25 +25,63 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def format_trip(trip):
-    if not trip:
+def format_doc(doc):
+    if not doc:
         return None
-    trip["id"] = str(trip["_id"])
-    del trip["_id"]
-    return trip
+    doc["id"] = str(doc["_id"])
+    del doc["_id"]
+    return doc
 
 # Health Check Endpoint
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "GlobeTrotter API"}
 
-# API Endpoints
+# Auth Endpoints for Real-Time User Data
+@app.post("/api/auth/register")
+async def register_user(user: UserRegister):
+    existing = await users_collection.find_one({"email": user.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="An account with this email already exists.")
+    
+    data = jsonable_encoder(user)
+    result = await users_collection.insert_one(data)
+    data["id"] = str(result.inserted_id)
+    if "_id" in data:
+        del data["_id"]
+    if "password" in data:
+        del data["password"]
+    return {"status": "success", "user": data}
+
+@app.post("/api/auth/login")
+async def login_user(user_cred: UserLogin):
+    doc = await users_collection.find_one({"email": user_cred.email})
+    if not doc or doc.get("password") != user_cred.password:
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    
+    formatted = format_doc(doc)
+    if "password" in formatted:
+        del formatted["password"]
+    return {"status": "success", "user": formatted}
+
+@app.get("/api/auth/me")
+async def get_user_profile(email: str = Query(...)):
+    doc = await users_collection.find_one({"email": email})
+    if not doc:
+        raise HTTPException(status_code=404, detail="User profile not found")
+    formatted = format_doc(doc)
+    if "password" in formatted:
+        del formatted["password"]
+    return formatted
+
+# API Endpoints for Trips
 @app.get("/api/trips")
-async def get_trips():
+async def get_trips(user_id: str = Query(None)):
     trips = []
-    cursor = trips_collection.find()
+    query = {"user_id": user_id} if user_id else {}
+    cursor = trips_collection.find(query)
     async for doc in cursor:
-        trips.append(format_trip(doc))
+        trips.append(format_doc(doc))
     return trips
 
 @app.post("/api/trips")
@@ -66,7 +104,7 @@ async def get_trip(trip_id: str):
         raise HTTPException(status_code=400, detail="Invalid Trip ID format")
     if not doc:
         raise HTTPException(status_code=404, detail="Trip not found")
-    return format_trip(doc)
+    return format_doc(doc)
 
 @app.put("/api/trips/{trip_id}")
 async def update_trip(trip_id: str, trip_update: TripUpdate):
@@ -84,7 +122,7 @@ async def update_trip(trip_id: str, trip_update: TripUpdate):
         raise HTTPException(status_code=404, detail="Trip not found")
     
     updated_doc = await trips_collection.find_one({"_id": obj_id})
-    return format_trip(updated_doc)
+    return format_doc(updated_doc)
 
 @app.delete("/api/trips/{trip_id}")
 async def delete_trip(trip_id: str):
@@ -111,7 +149,7 @@ async def add_activity(trip_id: str, activity: Activity):
         raise HTTPException(status_code=404, detail="Trip not found")
     
     updated_doc = await trips_collection.find_one({"_id": obj_id})
-    return format_trip(updated_doc)
+    return format_doc(updated_doc)
 
 @app.delete("/api/trips/{trip_id}/activities/{activity_index}")
 async def delete_activity(trip_id: str, activity_index: int):
@@ -132,7 +170,7 @@ async def delete_activity(trip_id: str, activity_index: int):
     await trips_collection.update_one({"_id": obj_id}, {"$set": {"activities": activities}})
     
     updated_doc = await trips_collection.find_one({"_id": obj_id})
-    return format_trip(updated_doc)
+    return format_doc(updated_doc)
 
 @app.get("/api/trips/{trip_id}/budget")
 async def get_trip_budget(trip_id: str):
@@ -173,7 +211,7 @@ async def get_public_trip(trip_id: str):
         
     if not doc:
         raise HTTPException(status_code=404, detail="Trip not found")
-    return format_trip(doc)
+    return format_doc(doc)
 
 @app.get("/api/catalog/destinations")
 async def get_destination_catalog():
@@ -185,7 +223,6 @@ async def get_destination_catalog():
         catalog.append(doc)
     
     if not catalog:
-        # Fallback rich catalog if collection is empty
         catalog = [
             {
                 "id": "cat_1",
@@ -265,7 +302,6 @@ async def generate_ai_itinerary(req: AIGenerateRequest):
         except Exception as e:
             print(f"Groq API call fallback triggered: {e}")
 
-    # Smart Rule-Based Fallback Generator
     per_day_budget = req.budget / req.days if req.days > 0 else req.budget
     stay_cost = round(per_day_budget * 0.4, 2)
     meal_cost = round(per_day_budget * 0.25, 2)
