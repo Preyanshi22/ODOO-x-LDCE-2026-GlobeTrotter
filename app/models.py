@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
 class Activity(BaseModel):
@@ -42,7 +42,7 @@ class AIGenerateRequest(BaseModel):
 class UserRegister(BaseModel):
     first_name: str
     last_name: Optional[str] = ""
-    email: EmailStr
+    email: str
     phone: Optional[str] = ""
     city: Optional[str] = ""
     country: Optional[str] = ""
@@ -51,5 +51,5 @@ class UserRegister(BaseModel):
     additional_info: Optional[str] = ""
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
