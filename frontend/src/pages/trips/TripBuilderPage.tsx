@@ -1,19 +1,11 @@
 import { ArrowLeft, ArrowRight, CalendarRange, Check, MapPin, Plus, Share2, Sparkles, Trash2, Edit3, DollarSign, Search, X } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StopCard } from '../../components/trips/StopCard';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { useApp, formatDateRange, formatMoney, tripDays } from '../../context/AppContext';
-
-interface ItinerarySection {
-  id: string;
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  budget: number;
-}
+import type { ItinerarySection } from '../../types';
 
 export function TripBuilderPage() {
   const { id } = useParams();
@@ -31,6 +23,7 @@ export function TripBuilderPage() {
     addActivity,
     removeActivity,
     addToast,
+    updateTrip,
   } = useApp();
 
   const trip = trips.find((item) => item.id === id) ?? selectedTrip;
@@ -50,33 +43,41 @@ export function TripBuilderPage() {
     return textMatch && regionMatch && costMatch;
   });
 
-  // Screen 5 Section Builder State
-  const [sections, setSections] = useState<ItinerarySection[]>([
-    {
-      id: 'sec-1',
-      title: 'Section 1: Transport & Arrival Transfers',
-      description: 'Flight bookings, local train station transfers, and airport pickup details.',
-      startDate: 'Day 1',
-      endDate: 'Day 1',
-      budget: 15000,
-    },
-    {
-      id: 'sec-2',
-      title: 'Section 2: Boutique Hotel & Accommodation',
-      description: 'Luxury hotel stay in city center with breakfast & amenities.',
-      startDate: 'Day 1',
-      endDate: 'Day 4',
-      budget: 25000,
-    },
-    {
-      id: 'sec-3',
-      title: 'Section 3: Guided Tours & Culinary Experiences',
-      description: 'Private city tours, temple visits, and fine dining reservations.',
-      startDate: 'Day 2',
-      endDate: 'Day 4',
-      budget: 10000,
-    },
-  ]);
+  // Dynamic per-trip section calculation & update
+  const currentTripSections = useMemo(() => {
+    if (!trip) return [];
+    if (trip.sections && trip.sections.length > 0) return trip.sections;
+
+    // Dynamically derive initial sections for THIS specific trip
+    const city = trip.stops[0]?.city || trip.name;
+    const days = tripDays(trip);
+    return [
+      {
+        id: `sec-${trip.id}-1`,
+        title: `Section 1: Transport & Arrival to ${city}`,
+        description: `Flight bookings, local transfers, and airport pickup details for ${city}.`,
+        startDate: 'Day 1',
+        endDate: 'Day 1',
+        budget: Math.round((trip.budget?.total || 50000) * 0.25)
+      },
+      {
+        id: `sec-${trip.id}-2`,
+        title: `Section 2: Hotel & Accommodation in ${city}`,
+        description: `Boutique hotel stay in city center with breakfast & amenities.`,
+        startDate: 'Day 1',
+        endDate: `Day ${days}`,
+        budget: Math.round((trip.budget?.total || 50000) * 0.45)
+      },
+      {
+        id: `sec-${trip.id}-3`,
+        title: `Section 3: Guided Tours & Culinary Experiences`,
+        description: `Private city tours, sightseeing visits, and fine dining reservations.`,
+        startDate: 'Day 1',
+        endDate: `Day ${days}`,
+        budget: Math.round((trip.budget?.total || 50000) * 0.3)
+      }
+    ];
+  }, [trip]);
 
   const [newSection, setNewSection] = useState({ title: '', description: '', startDate: 'Day 1', endDate: 'Day 2', budget: 5000 });
 
@@ -93,24 +94,28 @@ export function TripBuilderPage() {
 
   const handleAddSection = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSection.title) return;
+    if (!trip || !newSection.title) return;
     const sec: ItinerarySection = {
       id: `sec-${Date.now()}`,
       title: newSection.title,
-      description: newSection.description || 'All necessary information about this section.',
+      description: newSection.description || 'Custom itinerary section details.',
       startDate: newSection.startDate,
       endDate: newSection.endDate,
       budget: Number(newSection.budget) || 5000,
     };
-    setSections((prev) => [...prev, sec]);
+
+    const updatedSections = [...currentTripSections, sec];
+    updateTrip({ ...trip, sections: updatedSections });
     setNewSection({ title: '', description: '', startDate: 'Day 1', endDate: 'Day 2', budget: 5000 });
     setModal(null);
-    addToast('New itinerary section added!', 'success');
+    addToast(`Added section "${sec.title}" to ${trip.name}!`, 'success');
   };
 
   const removeSection = (secId: string) => {
-    setSections((prev) => prev.filter((s) => s.id !== secId));
-    addToast('Section removed.', 'info');
+    if (!trip) return;
+    const updatedSections = currentTripSections.filter((s) => s.id !== secId);
+    updateTrip({ ...trip, sections: updatedSections });
+    addToast('Itinerary section removed.', 'info');
   };
 
   const totalActivityCost = trip.stops.flatMap((stop) => stop.activities).reduce((sum, activity) => sum + activity.price, 0);
@@ -170,7 +175,7 @@ export function TripBuilderPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {sections.map((sec) => (
+          {currentTripSections.map((sec) => (
             <div
               key={sec.id}
               className="card"
@@ -246,16 +251,6 @@ export function TripBuilderPage() {
         </section>
 
         <aside className="builder-aside">
-          <div className="card next-step-card">
-            <div className="next-step-icon"><Sparkles size={18} /></div>
-            <span className="eyebrow">Next up</span>
-            <h3>Fill your days with moments</h3>
-            <p>Find activities that turn a destination into a memory.</p>
-            <Button className="button-wide" variant="dark" onClick={() => { setStopForActivity(trip.stops[0]?.id ?? ''); setModal('activity'); }}>
-              Browse experiences <ArrowRight size={15} />
-            </Button>
-          </div>
-
           <div className="card builder-budget-card">
             <div className="section-heading">
               <h3>Budget snapshot</h3>

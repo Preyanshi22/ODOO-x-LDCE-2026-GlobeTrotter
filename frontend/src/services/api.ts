@@ -196,4 +196,25 @@ export const api = {
       return { users: 0, trips: 0, posts: 0 };
     }
   },
+
+  async fetchSharedItinerary(id: string): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/shared-itinerary/${id}`);
+      if (!res.ok) throw new Error('Shared itinerary unavailable');
+      return await res.json();
+    } catch (err) {
+      console.warn('API fetchSharedItinerary error:', err);
+      return null;
+    }
+  },
+
+  async copySharedItinerary(id: string, userId?: string): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/shared-itinerary/${id}/copy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId || 'guest' })
+    });
+    if (!res.ok) throw new Error('Failed to copy shared itinerary');
+    return await res.json();
+  }
 };

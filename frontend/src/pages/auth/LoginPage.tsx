@@ -7,7 +7,7 @@ import { AuthLayout } from './AuthLayout';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { addToast, loginUser } = useApp();
+  const { addToast, loginUser, copyTrip } = useApp();
 
   const [email, setEmail] = useState('aarav@globetrotter.app');
   const [password, setPassword] = useState('password123');
@@ -25,6 +25,18 @@ export function LoginPage() {
     try {
       await loginUser(email, password);
       setLoading(false);
+
+      const pendingTripId = sessionStorage.getItem('gt_pending_copy_trip_id');
+      if (pendingTripId) {
+        sessionStorage.removeItem('gt_pending_copy_trip_id');
+        const copied = copyTrip(pendingTripId);
+        if (copied) {
+          addToast('✦ Shared itinerary copied to your account!', 'success');
+          navigate(`/trips/${copied.id}/build`);
+          return;
+        }
+      }
+
       addToast('Welcome back to GlobeTrotter!', 'success');
       navigate('/');
     } catch (err: any) {

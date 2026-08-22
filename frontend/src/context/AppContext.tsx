@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { mockApi } from '../services/mockApi';
+import { initialTrips } from '../data/mockData';
 import { api, type UserRegisterData } from '../services/api';
 import { supabaseAuth } from '../services/supabaseAuth';
-import type { Activity, CommunityPost, Destination, ItineraryActivity, Stop, ToastMessage, Trip, TripStatus, UserProfile } from '../types';
+import type { Activity, Budget, CommunityPost, Destination, ItineraryActivity, Stop, ToastMessage, Trip, TripStatus, UserProfile } from '../types';
 
 interface AppContextValue {
   trips: Trip[];
@@ -59,9 +60,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       mockApi.destinations.list(),
       mockApi.activities.list(),
     ]).then(([backendTrips, backendPosts, seedDestinations, seedActivities]) => {
-      let finalTrips: Trip[] = [];
+      let mappedBackendTrips: Trip[] = [];
       if (backendTrips && backendTrips.length > 0) {
-        finalTrips = backendTrips.map((bt: any) => ({
+        mappedBackendTrips = backendTrips.map((bt: any) => ({
           id: bt.id || String(bt._id),
           name: bt.title || bt.name || 'Untitled Trip',
           description: bt.description || 'Custom Travel Itinerary',
@@ -70,16 +71,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
           cover: bt.cover || 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85',
           status: 'upcoming' as TripStatus,
           createdAt: new Date().toISOString(),
-          budget: {
-            total: bt.total_budget || 50000,
-            categories: {
-              Transport: Math.round((bt.total_budget || 50000) * 0.2),
-              Accommodation: Math.round((bt.total_budget || 50000) * 0.4),
-              Activities: Math.round((bt.total_budget || 50000) * 0.2),
-              Meals: Math.round((bt.total_budget || 50000) * 0.15),
-              Other: Math.round((bt.total_budget || 50000) * 0.05),
-            },
-          },
+          budget: bt.total_budget && bt.total_budget !== 50000
+            ? {
+                total: bt.total_budget,
+                categories: {
+                  Transport: Math.round(bt.total_budget * 0.25),
+                  Accommodation: Math.round(bt.total_budget * 0.40),
+                  Activities: Math.round(bt.total_budget * 0.20),
+                  Meals: Math.round(bt.total_budget * 0.10),
+                  Other: Math.round(bt.total_budget * 0.05),
+                },
+              }
+            : calculateTripBudget(bt.title || bt.name || '', bt.start_date || '2026-09-01', bt.end_date || '2026-09-05'),
           stops: (bt.stops || []).map((s: any, idx: number) => ({
             id: `stop-${idx}`,
             city: s.city_name || s.city || 'City',
@@ -104,6 +107,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
           })),
         }));
       }
+
+      // Merge initial seed trips, backend trips, and local storage saved trips!
+      const localTrips: Trip[] = Array.isArray(parsed?.trips) ? parsed!.trips : [];
+      const mergedMap = new Map<string, Trip>();
+
+      // Seed initial trips first
+      initialTrips.forEach((t: Trip) => mergedMap.set(t.id, t));
+
+      // Add backend trips
+      mappedBackendTrips.forEach((t: Trip) => mergedMap.set(t.id, t));
+
+      // Add local stored trips (so user-created trips are NEVER lost on refresh!)
+      localTrips.forEach((t: Trip) => mergedMap.set(t.id, t));
+
+      const finalTrips = Array.from(mergedMap.values());
 
       let activeProfile: UserProfile = {
         firstName: 'Guest',
@@ -155,12 +173,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setActivities(seedActivities);
       setProfile(activeProfile);
       setPosts(initialPosts);
-      setSelectedTripId(finalTrips[0]?.id ?? '');
+      setSelectedTripId(parsed?.selectedTripId || finalTrips[0]?.id || '');
     });
   }, []);
 
   useEffect(() => {
-    if (!profile) return;
     window.localStorage.setItem(STORAGE, JSON.stringify({ trips, profile, selectedTripId }));
   }, [trips, profile, selectedTripId]);
 
@@ -302,13 +319,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const currentUser = savedUserStr ? JSON.parse(savedUserStr) : null;
       const user_id = currentUser?.id || profile?.email || 'user_guest';
 
+      const placeBudget = calculateTripBudget(input.name + ' ' + (input.description || ''), input.startDate, input.endDate);
+
       try {
         const backendRes = await api.createTrip({
           title: input.name,
           user_id,
           start_date: input.startDate,
           end_date: input.endDate,
-          total_budget: 50000,
+          total_budget: placeBudget.total,
           stops: [{ city_name: input.name, start_date: input.startDate, end_date: input.endDate }],
         });
         if (backendRes?.id) createdId = backendRes.id;
@@ -321,10 +340,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         id: createdId,
         status: 'upcoming',
         createdAt: new Date().toISOString(),
-        budget: {
-          total: 50000,
-          categories: { Transport: 10000, Accommodation: 20000, Activities: 10000, Meals: 7500, Other: 2500 },
-        },
+        budget: placeBudget,
         stops: [],
       };
 
@@ -505,11 +521,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [addToast]
   );
 
-  const selectedTrip = useMemo(() => trips.find((trip) => trip.id === selectedTripId), [trips, selectedTripId]);
+  const tripsWithDynamicStatus = useMemo(() => {
+    return trips.map((trip) => ({
+      ...trip,
+      status: getDynamicTripStatus(trip.startDate, trip.endDate)
+    }));
+  }, [trips]);
+
+  const selectedTrip = useMemo(() => tripsWithDynamicStatus.find((trip) => trip.id === selectedTripId), [tripsWithDynamicStatus, selectedTripId]);
 
   const value = useMemo(
     () => ({
-      trips,
+      trips: tripsWithDynamicStatus,
       destinations,
       activities,
       profile,
@@ -538,7 +561,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearAllUserData,
     }),
     [
-      trips,
+      tripsWithDynamicStatus,
       destinations,
       activities,
       profile,
@@ -574,6 +597,64 @@ export function useApp() {
   const value = useContext(AppContext);
   if (!value) throw new Error('useApp must be used within AppProvider');
   return value;
+}
+
+export function getDynamicTripStatus(startDateStr: string, endDateStr: string): TripStatus {
+  if (!startDateStr || !endDateStr) return 'upcoming';
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(`${startDateStr}T00:00:00`);
+  const end = new Date(`${endDateStr}T23:59:59`);
+
+  if (today > end) {
+    return 'completed';
+  } else if (today >= start && today <= end) {
+    return 'ongoing';
+  } else {
+    return 'upcoming';
+  }
+}
+
+export function calculateTripBudget(placeOrName: string, startDateStr: string, endDateStr: string): Budget {
+  const name = (placeOrName || '').toLowerCase();
+  
+  // Base daily rate estimation according to place cost index & tier
+  let dailyRate = 7500; // default medium-tier
+
+  if (name.includes('switzerland') || name.includes('zurich') || name.includes('hawaii') || name.includes('honolulu') || name.includes('maldives') || name.includes('tokyo') || name.includes('japan') || name.includes('london') || name.includes('iceland') || name.includes('reykjavik') || name.includes('new zealand') || name.includes('queenstown')) {
+    dailyRate = 14500; // Premium Luxury Destinations
+  } else if (name.includes('paris') || name.includes('france') || name.includes('rome') || name.includes('italy') || name.includes('dubai') || name.includes('uae') || name.includes('singapore') || name.includes('sydney') || name.includes('norway') || name.includes('tromsø') || name.includes('canada') || name.includes('banff')) {
+    dailyRate = 11000; // High-Cost Destinations
+  } else if (name.includes('barcelona') || name.includes('spain') || name.includes('prague') || name.includes('istanbul') || name.includes('bali') || name.includes('indonesia') || name.includes('cusco') || name.includes('peru')) {
+    dailyRate = 6500; // Moderate Destinations
+  } else if (name.includes('phuket') || name.includes('thailand') || name.includes('cairo') || name.includes('egypt') || name.includes('morocco') || name.includes('marrakech') || name.includes('vietnam') || name.includes('goa') || name.includes('india')) {
+    dailyRate = 4200; // Budget-Friendly Destinations
+  }
+
+  // Duration in days
+  let days = 4;
+  if (startDateStr && endDateStr) {
+    const startMs = new Date(`${startDateStr}T00:00:00`).getTime();
+    const endMs = new Date(`${endDateStr}T23:59:59`).getTime();
+    if (!isNaN(startMs) && !isNaN(endMs) && endMs >= startMs) {
+      days = Math.max(1, Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)));
+    }
+  }
+
+  const total = Math.round(dailyRate * days);
+
+  return {
+    total,
+    categories: {
+      Transport: Math.round(total * 0.25),
+      Accommodation: Math.round(total * 0.40),
+      Activities: Math.round(total * 0.20),
+      Meals: Math.round(total * 0.10),
+      Other: Math.round(total * 0.05),
+    }
+  };
 }
 
 export function formatMoney(value: number) {

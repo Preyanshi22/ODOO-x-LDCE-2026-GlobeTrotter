@@ -9,6 +9,7 @@ import { TripsPage } from './pages/trips/TripsPage';
 import { CreateTripPage } from './pages/trips/CreateTripPage';
 import { TripBuilderPage } from './pages/trips/TripBuilderPage';
 import { ItineraryViewPage } from './pages/itinerary/ItineraryViewPage';
+import { SharedItineraryPage } from './pages/itinerary/SharedItineraryPage';
 import { ExplorePage } from './pages/explore/ExplorePage';
 import { BudgetPage } from './pages/budget/BudgetPage';
 import { CalendarPage } from './pages/calendar/CalendarPage';
@@ -54,7 +55,8 @@ export function App() {
           <Route path="/trips/new" element={<ShellRoute><CreateTripPage /></ShellRoute>} />
           <Route path="/trips/:id/build" element={<ShellRoute><TripBuilderPage /></ShellRoute>} />
           <Route path="/trips/:id/view" element={<ShellRoute><ItineraryViewPage /></ShellRoute>} />
-          <Route path="/shared/:id" element={<ShellRoute><ItineraryViewPage shared /></ShellRoute>} />
+          <Route path="/shared/:id" element={<SharedItineraryPage />} />
+          <Route path="/shared/itinerary/:id" element={<SharedItineraryPage />} />
           <Route path="/explore" element={<ShellRoute><ExplorePage /></ShellRoute>} />
           <Route path="/explore/cities" element={<ShellRoute><ExplorePage type="cities" /></ShellRoute>} />
           <Route path="/explore/cities/:id" element={<ShellRoute><ExplorePage type="cities" /></ShellRoute>} />

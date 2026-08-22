@@ -269,6 +269,90 @@ async def delete_trip(trip_id: str):
 
     return {"status": "success", "message": f"Trip {trip_id} deleted successfully"}
 
+# Public Shared Itinerary Endpoints
+@app.get("/api/shared-itinerary/{trip_id}")
+async def get_shared_itinerary(trip_id: str):
+    mem_t = next((t for t in MEM_TRIPS if t.get("id") == trip_id), None)
+    if mem_t:
+        return {
+            "id": mem_t.get("id"),
+            "title": mem_t.get("title") or mem_t.get("name") or "Public Shared Itinerary",
+            "name": mem_t.get("name") or mem_t.get("title") or "Public Shared Itinerary",
+            "description": mem_t.get("description", "Curated travel itinerary."),
+            "start_date": mem_t.get("start_date") or mem_t.get("startDate") or "2026-09-01",
+            "end_date": mem_t.get("end_date") or mem_t.get("endDate") or "2026-09-05",
+            "cover": mem_t.get("cover") or "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85",
+            "total_budget": mem_t.get("total_budget") or mem_t.get("budget", {}).get("total", 50000),
+            "stops": mem_t.get("stops", []),
+            "activities": mem_t.get("activities", []),
+            "is_public": True
+        }
+
+    try:
+        doc = await asyncio.wait_for(trips_collection.find_one({"_id": ObjectId(trip_id)}), timeout=2.0)
+        if doc:
+            formatted = format_doc(doc)
+            return {
+                "id": formatted.get("id"),
+                "title": formatted.get("title") or formatted.get("name") or "Public Shared Itinerary",
+                "name": formatted.get("name") or formatted.get("title") or "Public Shared Itinerary",
+                "description": formatted.get("description", "Curated travel itinerary."),
+                "start_date": formatted.get("start_date") or formatted.get("startDate") or "2026-09-01",
+                "end_date": formatted.get("end_date") or formatted.get("endDate") or "2026-09-05",
+                "cover": formatted.get("cover") or "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85",
+                "total_budget": formatted.get("total_budget") or formatted.get("budget", {}).get("total", 50000),
+                "stops": formatted.get("stops", []),
+                "activities": formatted.get("activities", []),
+                "is_public": True
+            }
+    except Exception:
+        pass
+
+    raise HTTPException(status_code=404, detail="Public itinerary not found or unavailable")
+
+@app.post("/api/shared-itinerary/{trip_id}/copy")
+async def copy_shared_itinerary(trip_id: str, request: Request):
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    
+    target_user_id = body.get("user_id", "authenticated_user")
+    
+    original = next((t for t in MEM_TRIPS if t.get("id") == trip_id), None)
+    if not original:
+        try:
+            doc = await asyncio.wait_for(trips_collection.find_one({"_id": ObjectId(trip_id)}), timeout=2.0)
+            if doc:
+                original = format_doc(doc)
+        except Exception:
+            pass
+
+    if not original:
+        raise HTTPException(status_code=404, detail="Original itinerary not found to copy")
+
+    new_id = f"trip_{secrets.token_hex(6)}"
+    copied_trip = {
+        **original,
+        "id": new_id,
+        "title": f"{original.get('title') or original.get('name') or 'Trip'} (Copy)",
+        "name": f"{original.get('name') or original.get('title') or 'Trip'} (Copy)",
+        "user_id": target_user_id,
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    }
+    
+    MEM_TRIPS.append(copied_trip)
+
+    async def try_mongo_insert():
+        try:
+            await asyncio.wait_for(trips_collection.insert_one({**copied_trip}), timeout=3.0)
+        except Exception:
+            pass
+
+    asyncio.create_task(try_mongo_insert())
+    return copied_trip
+
 @app.post("/api/trips/{trip_id}/activities")
 async def add_activity(trip_id: str, activity: Activity):
     act_data = jsonable_encoder(activity)

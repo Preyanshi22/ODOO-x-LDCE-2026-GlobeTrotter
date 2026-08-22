@@ -8,7 +8,7 @@ import { AuthLayout } from './AuthLayout';
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const { addToast, registerUser } = useApp();
+  const { addToast, registerUser, copyTrip } = useApp();
 
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,6 +60,18 @@ export function RegisterPage() {
       });
 
       setLoading(false);
+
+      const pendingTripId = sessionStorage.getItem('gt_pending_copy_trip_id');
+      if (pendingTripId) {
+        sessionStorage.removeItem('gt_pending_copy_trip_id');
+        const copied = copyTrip(pendingTripId);
+        if (copied) {
+          addToast(`Welcome to GlobeTrotter, ${form.firstName}! The shared trip has been copied to your account.`, 'success');
+          navigate(`/trips/${copied.id}/build`);
+          return;
+        }
+      }
+
       addToast(`Welcome to GlobeTrotter, ${form.firstName}! Your account was created successfully.`, 'success');
       navigate('/');
     } catch (err: any) {

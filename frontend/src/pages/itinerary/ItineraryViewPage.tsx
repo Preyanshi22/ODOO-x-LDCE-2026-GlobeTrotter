@@ -11,7 +11,11 @@ import {
   ArrowDown,
   CircleDollarSign,
   Wallet,
-  Check
+  Check,
+  Plus,
+  Trash2,
+  Sparkles,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -21,10 +25,27 @@ import { SafeImage } from '../../components/ui/Image';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { formatDateRange, formatMoney, tripDays, useApp } from '../../context/AppContext';
 
+function getCategoryFallbackImage(category: string) {
+  switch (category) {
+    case 'Adventure':
+      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=85';
+    case 'Food':
+      return 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=85';
+    case 'Culture':
+      return 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=85';
+    case 'Nature':
+      return 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=85';
+    case 'History':
+      return 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=85';
+    default:
+      return 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=85';
+  }
+}
+
 export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { selectedTrip, trips, copyTrip, addToast } = useApp();
+  const { selectedTrip, trips, copyTrip, updateTrip, addToast } = useApp();
   const trip = trips.find((item) => item.id === id) ?? selectedTrip;
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,6 +53,19 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
   const [sortBy, setSortBy] = useState('time');
   const [groupBy, setGroupBy] = useState('day');
   const [shareModalOpen, setShareModalOpen] = useState(false);
+
+  // State for Inline Add Activity Form
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [targetDayForAdd, setTargetDayForAdd] = useState(1);
+  const [newActivity, setNewActivity] = useState({
+    name: '',
+    category: 'Adventure',
+    price: '3500',
+    duration: '2 hours',
+    time: '10:00 AM',
+    description: '',
+    image: ''
+  });
 
   // Flatten all activities with their associated stop & day info
   const allActivities = useMemo(() => {
@@ -67,7 +101,94 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
       </div>
     );
 
-  const shareUrl = `${window.location.origin}/shared/${trip.id}`;
+  const shareUrl = `${window.location.origin}/shared/itinerary/${trip.id}`;
+
+  const openAddFormForDay = (dayNum: number) => {
+    setTargetDayForAdd(dayNum);
+    setNewActivity({
+      name: '',
+      category: 'Adventure',
+      price: '3500',
+      duration: '2 hours',
+      time: '10:00 AM',
+      description: '',
+      image: ''
+    });
+    setAddModalOpen(true);
+  };
+
+  const handleDeleteActivity = (activityId: string, stopId: string) => {
+    if (!trip) return;
+    const updatedStops = trip.stops.map((stop) => {
+      if (stop.id === stopId) {
+        return {
+          ...stop,
+          activities: stop.activities.filter((act) => act.id !== activityId)
+        };
+      }
+      return stop;
+    });
+
+    const updatedTrip = { ...trip, stops: updatedStops };
+    updateTrip(updatedTrip);
+    addToast('Activity and its expense were removed.', 'info');
+  };
+
+  const handleSaveActivity = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trip || !newActivity.name.trim()) {
+      addToast('Please enter an activity name.', 'error');
+      return;
+    }
+
+    const priceNum = Number(newActivity.price) || 0;
+    const fallbackImage = getCategoryFallbackImage(newActivity.category);
+
+    const createdActivity = {
+      id: `act-${Date.now()}`,
+      name: newActivity.name.trim(),
+      category: newActivity.category as any,
+      price: priceNum,
+      duration: newActivity.duration || '2 hours',
+      time: newActivity.time || '10:00 AM',
+      day: targetDayForAdd,
+      rating: 4.9,
+      city: trip.stops[0]?.city || trip.name,
+      country: trip.stops[0]?.country || 'Destination',
+      description: newActivity.description || 'Custom added physical activity.',
+      image: newActivity.image.trim() ? newActivity.image.trim() : fallbackImage
+    };
+
+    let updatedStops = [...trip.stops];
+    if (updatedStops.length === 0) {
+      updatedStops = [
+        {
+          id: `stop-${Date.now()}`,
+          city: trip.name,
+          country: 'Destination',
+          arrival: trip.startDate,
+          departure: trip.endDate,
+          image: fallbackImage,
+          activities: [createdActivity]
+        }
+      ];
+    } else {
+      updatedStops = updatedStops.map((stop, idx) => {
+        if (idx === 0) {
+          return {
+            ...stop,
+            activities: [...stop.activities, createdActivity]
+          };
+        }
+        return stop;
+      });
+    }
+
+    const updatedTrip = { ...trip, stops: updatedStops };
+    updateTrip(updatedTrip);
+    addToast(`✦ Added "${newActivity.name}" (Expense: ${formatMoney(priceNum)}) to Day ${targetDayForAdd}!`, 'success');
+    setAddModalOpen(false);
+  };
 
   return (
     <div className="itinerary-page-screen9" style={{ padding: '24px 32px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -114,7 +235,7 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
         </div>
       </div>
 
-      {/* Screen 9 Toolbar / Top Bar */}
+      {/* Toolbar / Top Bar */}
       <div
         className="screen9-toolbar card"
         style={{
@@ -179,7 +300,8 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
               'Food',
               'Culture',
               'Nature',
-              'History'
+              'History',
+              'Wellness'
             ]}
             ariaLabel="Filter category"
           />
@@ -197,7 +319,7 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
         </div>
       </div>
 
-      {/* Screen 9 Title Banner */}
+      {/* Title Banner */}
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
         <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '12px' }}>
           Itinerary & Budget Breakdown
@@ -243,7 +365,7 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
         </span>
       </div>
 
-      {/* Day-by-Day Screen 9 Flow */}
+      {/* Day-by-Day Flow */}
       <div className="screen9-days-flow" style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
         {daysArray.map((dayNum) => {
           let dayActs = filteredActivities.filter((a) => a.day === dayNum);
@@ -293,11 +415,171 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--sage)', fontWeight: 700, fontSize: '14px' }}>
-                  <CircleDollarSign size={18} />
-                  <span>Day Expense: {formatMoney(dayTotalExpense)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--sage)', fontWeight: 700, fontSize: '14px' }}>
+                    <CircleDollarSign size={18} />
+                    <span>Day Expense: {formatMoney(dayTotalExpense)}</span>
+                  </div>
+
+                  {!shared && (
+                    <Button
+                      variant="secondary"
+                      icon={<Plus size={15} />}
+                      onClick={() => openAddFormForDay(dayNum)}
+                      style={{ padding: '6px 14px', fontSize: '12px' }}
+                    >
+                      + Add Activity
+                    </Button>
+                  )}
                 </div>
               </div>
+
+              {/* Inline Expansion Add Activity Form for Day {dayNum} */}
+              {addModalOpen && targetDayForAdd === dayNum && (
+                <form
+                  onSubmit={handleSaveActivity}
+                  style={{
+                    background: 'linear-gradient(135deg, #fffdfa 0%, #fff9ee 100%)',
+                    borderRadius: '20px',
+                    border: '2px solid var(--amber)',
+                    padding: '24px',
+                    marginBottom: '24px',
+                    boxShadow: '0 8px 30px rgba(229, 155, 62, 0.15)',
+                    animation: 'card-in 0.25s ease both'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                    <div>
+                      <span className="eyebrow" style={{ color: 'var(--amber-dark)', fontWeight: 700, fontSize: '11px' }}>
+                        Day {dayNum} Schedule
+                      </span>
+                      <h4 style={{ margin: '2px 0 0', fontSize: '18px', fontWeight: 700, color: 'var(--navy)' }}>
+                        Add Physical Activity & Expense to Day {dayNum}
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAddModalOpen(false)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-muted)' }}
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: '16px', marginBottom: '20px' }}>
+                    {/* Activity Name */}
+                    <div className="field">
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>
+                        Physical Activity Name <i>*</i>
+                      </label>
+                      <input
+                        type="text"
+                        value={newActivity.name}
+                        onChange={(e) => setNewActivity((prev) => ({ ...prev, name: e.target.value }))}
+                        placeholder="e.g. Glacier Flight & Alpine Hike"
+                        required
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: '#ffffff' }}
+                      />
+                    </div>
+
+                    {/* Category & Expense Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                      <div className="field">
+                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>
+                          Category
+                        </label>
+                        <CustomSelect
+                          value={newActivity.category}
+                          onChange={(val) => setNewActivity((prev) => ({ ...prev, category: val }))}
+                          options={['Adventure', 'Sightseeing', 'Food', 'Culture', 'Nature', 'History', 'Wellness']}
+                          ariaLabel="Activity Category"
+                        />
+                      </div>
+
+                      <div className="field">
+                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>
+                          Expense (₹ INR per person) <i>*</i>
+                        </label>
+                        <input
+                          type="number"
+                          value={newActivity.price}
+                          onChange={(e) => setNewActivity((prev) => ({ ...prev, price: e.target.value }))}
+                          placeholder="3500"
+                          min="0"
+                          required
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: '#ffffff' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Time & Duration Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                      <div className="field">
+                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>
+                          Scheduled Time
+                        </label>
+                        <input
+                          type="text"
+                          value={newActivity.time}
+                          onChange={(e) => setNewActivity((prev) => ({ ...prev, time: e.target.value }))}
+                          placeholder="10:00 AM"
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: '#ffffff' }}
+                        />
+                      </div>
+
+                      <div className="field">
+                        <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>
+                          Duration
+                        </label>
+                        <input
+                          type="text"
+                          value={newActivity.duration}
+                          onChange={(e) => setNewActivity((prev) => ({ ...prev, duration: e.target.value }))}
+                          placeholder="2 hours"
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: '#ffffff' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div className="field">
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>
+                        Description & Details
+                      </label>
+                      <textarea
+                        value={newActivity.description}
+                        onChange={(e) => setNewActivity((prev) => ({ ...prev, description: e.target.value }))}
+                        placeholder="What experiences are included in this activity?"
+                        rows={2}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: '#ffffff', resize: 'vertical' }}
+                      />
+                    </div>
+
+                    {/* Image URL */}
+                    <div className="field">
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>
+                        Photo Image URL (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={newActivity.image}
+                        onChange={(e) => setNewActivity((prev) => ({ ...prev, image: e.target.value }))}
+                        placeholder="Paste Unsplash image URL (leave empty for auto photo)"
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--line)', background: '#ffffff' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '12px', borderTop: '1px solid #ebdcc2' }}>
+                    <Button type="button" variant="secondary" onClick={() => setAddModalOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" icon={<Plus size={16} />}>
+                      Save Activity & Expense to Day {dayNum}
+                    </Button>
+                  </div>
+                </form>
+              )}
 
               {/* Day Activities + Side-by-Side Expense Box */}
               {dayActs.length > 0 ? (
@@ -324,7 +606,8 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
                             borderRadius: '18px',
                             padding: '16px',
                             background: 'var(--surface)',
-                            boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                            boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+                            position: 'relative'
                           }}
                         >
                           <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', height: '110px' }}>
@@ -347,16 +630,41 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
                             </span>
                           </div>
 
-                          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                              <Badge tone="amber">{activity.category}</Badge>
-                              <span style={{ fontSize: '11px', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Clock3 size={12} /> {activity.duration}
-                              </span>
-                              <span style={{ fontSize: '11px', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <MapPin size={12} /> {activity.stop.city}
-                              </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Badge tone="amber">{activity.category}</Badge>
+                                <span style={{ fontSize: '11px', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <Clock3 size={12} /> {activity.duration}
+                                </span>
+                                <span style={{ fontSize: '11px', color: 'var(--ink-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <MapPin size={12} /> {activity.stop.city}
+                                </span>
+                              </div>
+
+                              {/* Delete Activity Button */}
+                              {!shared && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteActivity(activity.id, activity.stop.id)}
+                                  title="Delete activity and expense"
+                                  style={{
+                                    border: 'none',
+                                    background: 'none',
+                                    color: 'var(--red)',
+                                    cursor: 'pointer',
+                                    padding: '4px',
+                                    borderRadius: '6px',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                    transition: 'background 0.2s'
+                                  }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
                             </div>
+
                             <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--navy)', margin: '0 0 6px' }}>
                               {activity.name}
                             </h4>
@@ -427,10 +735,20 @@ export function ItineraryViewPage({ shared = false }: { shared?: boolean }) {
                   ))}
                 </div>
               ) : (
-                <div style={{ padding: '24px', textAlign: 'center', background: 'var(--surface-soft)', borderRadius: '14px' }}>
-                  <p style={{ color: 'var(--ink-muted)', margin: 0, fontSize: '13px' }}>
+                <div style={{ padding: '28px', textAlign: 'center', background: 'var(--surface-soft)', borderRadius: '16px', border: '1px dashed var(--line)' }}>
+                  <p style={{ color: 'var(--ink-muted)', margin: '0 0 12px', fontSize: '13px' }}>
                     No physical activities scheduled for Day {dayNum}. Enjoy free exploration in {dayCity}!
                   </p>
+                  {!shared && (
+                    <Button
+                      variant="secondary"
+                      icon={<Plus size={15} />}
+                      onClick={() => openAddFormForDay(dayNum)}
+                      style={{ fontSize: '12px' }}
+                    >
+                      + Add First Activity for Day {dayNum}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
