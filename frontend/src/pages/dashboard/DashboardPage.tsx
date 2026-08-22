@@ -218,6 +218,7 @@ export function DashboardPage() {
             value={sortBy}
             onChange={setSortBy}
             icon={<ArrowDownUp size={15} />}
+            alignRight
             options={[
               { value: 'recent', label: 'Sort by...' },
               { value: 'name', label: 'Name (A–Z)' },

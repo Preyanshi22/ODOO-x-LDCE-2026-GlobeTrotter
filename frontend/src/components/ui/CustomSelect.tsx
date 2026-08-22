@@ -14,6 +14,7 @@ interface CustomSelectProps {
   placeholder?: string;
   className?: string;
   ariaLabel?: string;
+  alignRight?: boolean;
 }
 
 export function CustomSelect({
@@ -23,7 +24,8 @@ export function CustomSelect({
   icon,
   placeholder,
   className = '',
-  ariaLabel
+  ariaLabel,
+  alignRight = false
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +61,7 @@ export function CustomSelect({
       </button>
 
       {open && (
-        <div className="custom-select-dropdown" role="listbox">
+        <div className={`custom-select-dropdown ${alignRight ? 'align-right' : ''}`} role="listbox">
           {formattedOptions.map((option) => {
             const isSelected = option.value === value;
             return (
