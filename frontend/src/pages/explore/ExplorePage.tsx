@@ -5,6 +5,7 @@ import { DestinationCard } from '../../components/discovery/DestinationCard';
 import { ActivityCard } from '../../components/discovery/ActivityCard';
 import { useApp } from '../../context/AppContext';
 import { Button } from '../../components/ui/Button';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 
 export function ExplorePage({ type = 'cities' }: { type?: 'cities' | 'activities' }) {
   const { destinations, activities, trips, selectedTripId, addStop } = useApp();
@@ -65,11 +66,11 @@ export function ExplorePage({ type = 'cities' }: { type?: 'cities' | 'activities
         const locMatch = location === 'All locations' || item.city === location;
         const priceMatch =
           priceRange === 'Any price' ||
-          (priceRange === 'Under ₹2,000'
-            ? item.price < 2000
-            : priceRange === '₹2,000–₹5,000'
-            ? item.price >= 2000 && item.price <= 5000
-            : item.price > 5000);
+          (priceRange === 'Under ₹4,000'
+            ? item.price < 4000
+            : priceRange === '₹4,000–₹7,000'
+            ? item.price >= 4000 && item.price <= 7000
+            : item.price > 7000);
         const durationMatch =
           durationFilter === 'Any length' ||
           (durationFilter === 'Under 2 hours'
@@ -146,24 +147,26 @@ export function ExplorePage({ type = 'cities' }: { type?: 'cities' | 'activities
       {/* Tabs */}
       <div className="explore-tabs">
         <button
+          type="button"
           className={isCities ? 'active' : ''}
           onClick={() => {
             setActiveTab('cities');
             setParams({ tab: 'cities' });
           }}
         >
-          <Globe2 size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-          Destinations & Cities
+          <Globe2 size={16} />
+          <span>Destinations & Cities</span>
         </button>
         <button
+          type="button"
           className={!isCities ? 'active' : ''}
           onClick={() => {
             setActiveTab('activities');
             setParams({ tab: 'activities' });
           }}
         >
-          <Sparkles size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-          Activities & Experiences
+          <Sparkles size={16} />
+          <span>Activities & Experiences</span>
         </button>
       </div>
 
@@ -222,74 +225,64 @@ export function ExplorePage({ type = 'cities' }: { type?: 'cities' | 'activities
 
         <div className="explore-filters">
           {/* Region / Category Filter */}
-          <label>
-            <SlidersHorizontal size={15} />
-            <select
-              value={isCities ? region : category}
-              onChange={(e) => (isCities ? setRegion(e.target.value) : setCategory(e.target.value))}
-              aria-label="Filter by category or region"
-            >
-              <option>{isCities ? 'All regions' : 'All types'}</option>
-              {isCities
-                ? ['Europe', 'Asia', 'Middle East', 'North America', 'Mediterranean'].map((v) => (
-                    <option key={v}>{v}</option>
-                  ))
-                : ['Sightseeing', 'Food', 'Adventure', 'Culture', 'Shopping', 'Nature', 'Nightlife'].map((v) => (
-                    <option key={v}>{v}</option>
-                  ))}
-            </select>
-          </label>
+          <CustomSelect
+            value={isCities ? region : category}
+            onChange={(val) => (isCities ? setRegion(val) : setCategory(val))}
+            icon={<SlidersHorizontal size={15} />}
+            options={
+              isCities
+                ? ['All regions', 'Europe', 'Asia', 'Middle East', 'North America', 'Mediterranean']
+                : ['All types', 'Sightseeing', 'Food', 'Adventure', 'Culture', 'Shopping', 'Nature', 'Nightlife']
+            }
+            ariaLabel="Filter by category or region"
+          />
 
           {/* Cost / Price Filter */}
           {isCities ? (
-            <label>
-              <select value={costIndex} onChange={(e) => setCostIndex(e.target.value)} aria-label="Filter by cost index">
-                <option>Any cost</option>
-                <option>Budget</option>
-                <option>Mid-range</option>
-                <option>Premium</option>
-              </select>
-            </label>
+            <CustomSelect
+              value={costIndex}
+              onChange={setCostIndex}
+              options={['Any cost', 'Budget', 'Mid-range', 'Premium']}
+              ariaLabel="Filter by cost index"
+            />
           ) : (
             <>
-              <label>
-                <select value={priceRange} onChange={(e) => setPriceRange(e.target.value)} aria-label="Filter by price">
-                  <option>Any price</option>
-                  <option>Under ₹2,000</option>
-                  <option>₹2,000–₹5,000</option>
-                  <option>Over ₹5,000</option>
-                </select>
-              </label>
+              <CustomSelect
+                value={priceRange}
+                onChange={setPriceRange}
+                options={['Any price', 'Under ₹4,000', '₹4,000–₹7,000', 'Over ₹7,000']}
+                ariaLabel="Filter by price"
+              />
 
-              <label>
-                <select value={durationFilter} onChange={(e) => setDurationFilter(e.target.value)} aria-label="Filter by duration">
-                  <option>Any length</option>
-                  <option>Under 2 hours</option>
-                  <option>Half day+</option>
-                </select>
-              </label>
+              <CustomSelect
+                value={durationFilter}
+                onChange={setDurationFilter}
+                options={['Any length', 'Under 2 hours', 'Half day+']}
+                ariaLabel="Filter by duration"
+              />
 
-              <label>
-                <select value={location} onChange={(e) => setLocation(e.target.value)} aria-label="Filter by location">
-                  <option>All locations</option>
-                  {Array.from(new Set(activities.map((item) => item.city))).map((city) => (
-                    <option key={city}>{city}</option>
-                  ))}
-                </select>
-              </label>
+              <CustomSelect
+                value={location}
+                onChange={setLocation}
+                options={['All locations', ...Array.from(new Set(activities.map((item) => item.city)))]}
+                ariaLabel="Filter by location"
+              />
             </>
           )}
 
           {/* Sort Filter */}
-          <label>
-            <Filter size={15} />
-            <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort results">
-              <option value="popular">Most popular</option>
-              <option value="name">Name A–Z</option>
-              <option value="cost-asc">Price: Low to High</option>
-              <option value="cost-desc">Price: High to Low</option>
-            </select>
-          </label>
+          <CustomSelect
+            value={sort}
+            onChange={setSort}
+            icon={<Filter size={15} />}
+            options={[
+              { value: 'popular', label: 'Most popular' },
+              { value: 'name', label: 'Name A–Z' },
+              { value: 'cost-asc', label: 'Price: Low to High' },
+              { value: 'cost-desc', label: 'Price: High to Low' },
+            ]}
+            ariaLabel="Sort results"
+          />
 
           {hasActiveFilters && (
             <button

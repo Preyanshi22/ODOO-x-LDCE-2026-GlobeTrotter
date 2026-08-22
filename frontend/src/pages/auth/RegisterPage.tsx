@@ -155,10 +155,7 @@ export function RegisterPage() {
             />
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}
-          <label className="checkbox-row">
-            <input type="checkbox" required />
-            <span>I agree to the <a href="#terms">Terms of service</a> and <a href="#privacy">Privacy policy</a>.</span>
-          </label>
+
           <Button className="button-large button-wide" type="submit" loading={loading}>
             {loading ? 'Creating your account...' : 'Create my account'} {!loading && <ArrowRight size={17} />}
           </Button>

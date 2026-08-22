@@ -1,6 +1,6 @@
 import { useState, useEffect, type ImgHTMLAttributes } from 'react';
 
-const GENERAL_FALLBACK = 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=85';
+const GENERAL_FALLBACK = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=85';
 
 export function SafeImage({ src, alt, className = '', ...props }: ImgHTMLAttributes<HTMLImageElement>) {
   const [currentSrc, setCurrentSrc] = useState(src || GENERAL_FALLBACK);

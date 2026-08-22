@@ -143,9 +143,9 @@ export const activities: Activity[] = [
     country: 'Switzerland',
     category: 'Adventure',
     duration: '5 hours',
-    price: 185,
+    price: 15400,
     description: 'Soar past snowy peaks and hike high-alpine glacier trails with panoramic mountain lake views.',
-    image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?auto=format&fit=crop&w=800&q=85',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=85',
     rating: 5.0
   },
   {
@@ -155,7 +155,7 @@ export const activities: Activity[] = [
     country: 'France',
     category: 'Sightseeing',
     duration: '2 hours',
-    price: 42,
+    price: 3500,
     description: 'Watch Paris turn gold from the observation deck as twilight sparkles over the Seine.',
     image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=85',
     rating: 4.9
@@ -167,7 +167,7 @@ export const activities: Activity[] = [
     country: 'Japan',
     category: 'Food',
     duration: '3 hours',
-    price: 78,
+    price: 6500,
     description: 'Learn authentic knife techniques and Edomae sushi crafting with a Tokyo master chef.',
     image: 'https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=85',
     rating: 4.8
@@ -179,7 +179,7 @@ export const activities: Activity[] = [
     country: 'UAE',
     category: 'Adventure',
     duration: '6 hours',
-    price: 95,
+    price: 7900,
     description: 'Golden dunes, camel trekking, and a traditional Bedouin barbecue camp under the desert stars.',
     image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=85',
     rating: 4.7
@@ -191,7 +191,7 @@ export const activities: Activity[] = [
     country: 'Italy',
     category: 'History' as Activity['category'],
     duration: '2.5 hours',
-    price: 58,
+    price: 4800,
     description: 'Explore underground gladiator chambers beneath illumination after public closing hours.',
     image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=85',
     rating: 4.9
@@ -203,7 +203,7 @@ export const activities: Activity[] = [
     country: 'Spain',
     category: 'Culture',
     duration: '2 hours',
-    price: 54,
+    price: 4500,
     description: 'Craft custom ceramic glazed souvenirs alongside a local Catalan studio artist.',
     image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=85',
     rating: 4.8
@@ -215,7 +215,7 @@ export const activities: Activity[] = [
     country: 'Indonesia',
     category: 'Nature',
     duration: '9 hours',
-    price: 64,
+    price: 5300,
     description: 'Snorkel in turquoise coves with manta rays and visit Kelingking cliff viewpoints.',
     image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=85',
     rating: 4.8
@@ -227,7 +227,7 @@ export const activities: Activity[] = [
     country: 'UK',
     category: 'Food',
     duration: '2 hours',
-    price: 38,
+    price: 3200,
     description: 'Sample artisanal cheeses, fresh oysters, and famous pastries with a local foodie guide.',
     image: 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=800&q=85',
     rating: 4.7
@@ -239,7 +239,7 @@ export const activities: Activity[] = [
     country: 'Singapore',
     category: 'Nature',
     duration: '2 hours',
-    price: 29,
+    price: 2400,
     description: 'Experience the magical evening light and music show beneath giant illuminated futuristic trees.',
     image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=800&q=85',
     rating: 4.8
@@ -251,7 +251,7 @@ export const activities: Activity[] = [
     country: 'Japan',
     category: 'Culture',
     duration: '1.5 hours',
-    price: 45,
+    price: 3700,
     description: 'Participate in an authentic matcha preparation in a historic 150-year-old wooden machiya.',
     image: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=800&q=85',
     rating: 4.9
@@ -273,7 +273,7 @@ export const initialTrips: Trip[] = [
     status: 'upcoming',
     shared: true,
     createdAt: '2025-01-14',
-    budget: { total: 3450, categories: { Transport: 680, Accommodation: 1320, Activities: 420, Meals: 780, Other: 160 } },
+    budget: { total: 285000, categories: { Transport: 68000, Accommodation: 132000, Activities: 35000, Meals: 42000, Other: 8000 } },
     stops: [
       {
         id: 'stop-paris',
@@ -309,7 +309,7 @@ export const initialTrips: Trip[] = [
     cover: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=85',
     status: 'upcoming',
     createdAt: '2025-02-01',
-    budget: { total: 4100, categories: { Transport: 1250, Accommodation: 1450, Activities: 520, Meals: 680, Other: 200 } },
+    budget: { total: 340000, categories: { Transport: 95000, Accommodation: 145000, Activities: 42000, Meals: 48000, Other: 10000 } },
     stops: [
       {
         id: 'stop-tokyo',
@@ -331,7 +331,7 @@ export const initialTrips: Trip[] = [
     cover: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=85',
     status: 'completed',
     createdAt: '2024-07-09',
-    budget: { total: 1850, categories: { Transport: 520, Accommodation: 620, Activities: 290, Meals: 310, Other: 110 } },
+    budget: { total: 145000, categories: { Transport: 42000, Accommodation: 58000, Activities: 22000, Meals: 18000, Other: 5000 } },
     stops: [
       {
         id: 'stop-bali',
