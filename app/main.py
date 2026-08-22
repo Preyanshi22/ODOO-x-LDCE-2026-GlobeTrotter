@@ -8,7 +8,7 @@ import secrets
 import base64
 import asyncio
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -22,6 +22,20 @@ JWT_SECRET = os.getenv("JWT_SECRET", "globetrotter_luxury_travel_sec_2026")
 # In-Memory Fast Memory Cache Fallback for instant responses
 MEM_USERS = {}
 MEM_TRIPS = []
+MEM_POSTS = [
+    {
+        "id": "post_seed",
+        "user": "Aarav Mehta",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+        "destination": "Kyoto, Japan",
+        "tripName": "Zen Gardens Explorer",
+        "body": "The golden pavilion was amazing at sunset! Highly recommend taking the path less traveled.",
+        "image": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80",
+        "likes": 42,
+        "comments": 8,
+        "createdAt": "1 hour ago"
+    }
+]
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
@@ -255,6 +269,90 @@ async def delete_trip(trip_id: str):
 
     return {"status": "success", "message": f"Trip {trip_id} deleted successfully"}
 
+# Public Shared Itinerary Endpoints
+@app.get("/api/shared-itinerary/{trip_id}")
+async def get_shared_itinerary(trip_id: str):
+    mem_t = next((t for t in MEM_TRIPS if t.get("id") == trip_id), None)
+    if mem_t:
+        return {
+            "id": mem_t.get("id"),
+            "title": mem_t.get("title") or mem_t.get("name") or "Public Shared Itinerary",
+            "name": mem_t.get("name") or mem_t.get("title") or "Public Shared Itinerary",
+            "description": mem_t.get("description", "Curated travel itinerary."),
+            "start_date": mem_t.get("start_date") or mem_t.get("startDate") or "2026-09-01",
+            "end_date": mem_t.get("end_date") or mem_t.get("endDate") or "2026-09-05",
+            "cover": mem_t.get("cover") or "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85",
+            "total_budget": mem_t.get("total_budget") or mem_t.get("budget", {}).get("total", 50000),
+            "stops": mem_t.get("stops", []),
+            "activities": mem_t.get("activities", []),
+            "is_public": True
+        }
+
+    try:
+        doc = await asyncio.wait_for(trips_collection.find_one({"_id": ObjectId(trip_id)}), timeout=2.0)
+        if doc:
+            formatted = format_doc(doc)
+            return {
+                "id": formatted.get("id"),
+                "title": formatted.get("title") or formatted.get("name") or "Public Shared Itinerary",
+                "name": formatted.get("name") or formatted.get("title") or "Public Shared Itinerary",
+                "description": formatted.get("description", "Curated travel itinerary."),
+                "start_date": formatted.get("start_date") or formatted.get("startDate") or "2026-09-01",
+                "end_date": formatted.get("end_date") or formatted.get("endDate") or "2026-09-05",
+                "cover": formatted.get("cover") or "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85",
+                "total_budget": formatted.get("total_budget") or formatted.get("budget", {}).get("total", 50000),
+                "stops": formatted.get("stops", []),
+                "activities": formatted.get("activities", []),
+                "is_public": True
+            }
+    except Exception:
+        pass
+
+    raise HTTPException(status_code=404, detail="Public itinerary not found or unavailable")
+
+@app.post("/api/shared-itinerary/{trip_id}/copy")
+async def copy_shared_itinerary(trip_id: str, request: Request):
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    
+    target_user_id = body.get("user_id", "authenticated_user")
+    
+    original = next((t for t in MEM_TRIPS if t.get("id") == trip_id), None)
+    if not original:
+        try:
+            doc = await asyncio.wait_for(trips_collection.find_one({"_id": ObjectId(trip_id)}), timeout=2.0)
+            if doc:
+                original = format_doc(doc)
+        except Exception:
+            pass
+
+    if not original:
+        raise HTTPException(status_code=404, detail="Original itinerary not found to copy")
+
+    new_id = f"trip_{secrets.token_hex(6)}"
+    copied_trip = {
+        **original,
+        "id": new_id,
+        "title": f"{original.get('title') or original.get('name') or 'Trip'} (Copy)",
+        "name": f"{original.get('name') or original.get('title') or 'Trip'} (Copy)",
+        "user_id": target_user_id,
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    }
+    
+    MEM_TRIPS.append(copied_trip)
+
+    async def try_mongo_insert():
+        try:
+            await asyncio.wait_for(trips_collection.insert_one({**copied_trip}), timeout=3.0)
+        except Exception:
+            pass
+
+    asyncio.create_task(try_mongo_insert())
+    return copied_trip
+
 @app.post("/api/trips/{trip_id}/activities")
 async def add_activity(trip_id: str, activity: Activity):
     act_data = jsonable_encoder(activity)
@@ -419,6 +517,66 @@ async def generate_ai_itinerary(req: AIGenerateRequest):
         ],
         "activities": activities,
         "is_public": False
+    }
+
+from fastapi import Request
+
+@app.get("/api/community")
+async def get_community_posts():
+    return MEM_POSTS
+
+@app.post("/api/community")
+async def create_community_post(request: Request):
+    data = await request.json()
+    post_id = f"post_{secrets.token_hex(6)}"
+    data["id"] = post_id
+    if "likes" not in data:
+        data["likes"] = 0
+    if "comments" not in data:
+        data["comments"] = 0
+    if "createdAt" not in data:
+        data["createdAt"] = "Just now"
+    MEM_POSTS.insert(0, data)
+    return data
+
+@app.put("/api/auth/profile")
+async def update_user_profile(request: Request):
+    data = await request.json()
+    email = data.get("email", "").lower()
+    if email in MEM_USERS:
+        MEM_USERS[email].update(data)
+        async def try_mongo_update():
+            try:
+                await asyncio.wait_for(users_collection.update_one({"email": email}, {"$set": data}), timeout=2.0)
+            except Exception:
+                pass
+        asyncio.create_task(try_mongo_update())
+        return MEM_USERS[email]
+    
+    # Check mongo just in case
+    try:
+        doc = await asyncio.wait_for(users_collection.find_one({"email": email}), timeout=2.0)
+        if doc:
+            MEM_USERS[email] = format_doc(doc)
+            MEM_USERS[email].update(data)
+            async def try_mongo_update():
+                try:
+                    await asyncio.wait_for(users_collection.update_one({"email": email}, {"$set": data}), timeout=2.0)
+                except Exception:
+                    pass
+            asyncio.create_task(try_mongo_update())
+            return MEM_USERS[email]
+    except Exception:
+        pass
+
+    raise HTTPException(status_code=404, detail="User not found")
+
+@app.get("/api/admin/stats")
+async def get_admin_stats():
+    return {
+        "users": len(MEM_USERS),
+        "trips": len(MEM_TRIPS),
+        "posts": len(MEM_POSTS)
     }
 
 # Static file serving

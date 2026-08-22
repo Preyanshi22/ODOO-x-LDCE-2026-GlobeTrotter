@@ -1,5 +1,36 @@
-import { ArrowLeft, ShieldCheck, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import type { ReactNode } from 'react';
-import { SafeImage } from '../../components/ui/Image';
-export function AuthLayout({ children, mode }: { children: ReactNode; mode: 'login' | 'register' }) { return <div className="auth-layout"><aside className="auth-visual"><SafeImage src="https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1400&q=85" alt="A traveller looking over a mountain valley" /><div className="auth-visual-overlay" /><Link className="brand auth-brand" to="/"><span className="brand-symbol">✦</span><span>Globe<span>Trotter</span></span></Link><div className="auth-quote"><span className="eyebrow light">Travel, thoughtfully planned</span><h2>Go somewhere<br /><em>that feels like you.</em></h2><p>Keep the spark of discovery and the calm of a good plan, all in one place.</p><div className="auth-proof"><span><Sparkles size={15} /> 12k+ journeys planned</span><span><ShieldCheck size={15} /> Your plans stay yours</span></div></div><div className="auth-location">{mode === 'login' ? 'Palawan, Philippines' : 'The world is waiting'} <span>•</span> 11° 14′ N, 119° 19′ E</div></aside><main className="auth-panel"><Link to="/" className="auth-back"><ArrowLeft size={16} /> Back to home</Link>{children}</main></div>; }
+import { ReactNode } from 'react';
+
+const swissAlpsBg = encodeURI('/assets/images/Swiss Alps Majesty.png');
+
+export function AuthLayout({ children }: { children: ReactNode; mode: 'login' | 'register' }) {
+  return (
+    <div
+      className="auth-screen-v2"
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 20px',
+        position: 'relative',
+        backgroundImage: `linear-gradient(180deg, rgba(16, 28, 22, 0.65) 0%, rgba(12, 22, 17, 0.85) 100%), url("${swissAlpsBg}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Top Header Brand */}
+      <div style={{ position: 'absolute', top: '24px', left: '32px', zIndex: 10 }}>
+        <a href="/" className="brand" style={{ color: '#ffffff', textDecoration: 'none' }}>
+          <span className="brand-symbol">✦</span>
+          <span style={{ color: '#ffffff' }}>Globe<span style={{ color: 'var(--amber)' }}>Trotter</span></span>
+        </a>
+      </div>
+
+      {children}
+    </div>
+  );
+}

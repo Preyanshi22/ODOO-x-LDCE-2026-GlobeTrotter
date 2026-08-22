@@ -1,5 +1,5 @@
 export type TripStatus = 'upcoming' | 'ongoing' | 'completed';
-export type ActivityCategory = 'Sightseeing' | 'Food' | 'Adventure' | 'Culture' | 'Shopping' | 'Nature' | 'Nightlife';
+export type ActivityCategory = 'Sightseeing' | 'Food' | 'Adventure' | 'Culture' | 'Shopping' | 'Nature' | 'Nightlife' | 'History' | 'Wellness';
 export type BudgetCategory = 'Transport' | 'Accommodation' | 'Activities' | 'Meals' | 'Other';
 
 export interface Destination {
@@ -47,6 +47,15 @@ export interface Budget {
   categories: Record<BudgetCategory, number>;
 }
 
+export interface ItinerarySection {
+  id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  budget: number;
+}
+
 export interface Trip {
   id: string;
   name: string;
@@ -57,6 +66,7 @@ export interface Trip {
   status: TripStatus;
   budget: Budget;
   stops: Stop[];
+  sections?: ItinerarySection[];
   createdAt: string;
   shared?: boolean;
 }

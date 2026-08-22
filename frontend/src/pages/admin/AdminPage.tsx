@@ -1,7 +1,220 @@
+import { useEffect, useState } from 'react';
 import { Activity, ArrowUpRight, Globe2, MoreHorizontal, TrendingUp, Users, Wallet } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { analytics, adminUsers } from '../../data/mockData';
 import { StatCard } from '../../components/ui/StatCard';
 import { Badge } from '../../components/ui/Badge';
 import { IconButton } from '../../components/ui/Button';
-export function AdminPage() { return <div className="admin-page"><div className="page-heading-row"><div><p className="eyebrow">The bigger picture</p><h1>Analytics</h1><p className="lede">A living pulse on the GlobeTrotter community.</p></div><div className="admin-date">Last updated just now <span className="live-dot" /> Live</div></div><div className="admin-kpis"><StatCard label="Total travellers" value="12,480" detail="+18.4% this month" icon={<Users />} tone="amber" /><StatCard label="Trips created" value="28,691" detail="+12.8% this month" icon={<Globe2 />} tone="green" /><StatCard label="Active trips" value="1,842" detail="+8.2% this month" icon={<Activity />} tone="blue" /><StatCard label="Top destination" value="Paris" detail="3,842 saves" icon={<TrendingUp />} tone="lilac" /></div><div className="admin-chart-grid"><article className="card admin-chart-card"><div className="section-heading"><div><p className="eyebrow">Momentum</p><h2>Trips created over time</h2></div><span className="chart-stat"><strong>74</strong><small>this month <ArrowUpRight size={13} /></small></span></div><div className="large-chart"><ResponsiveContainer width="100%" height="100%"><LineChart data={analytics.monthlyTrips}><CartesianGrid vertical={false} stroke="#ebe7df" /><XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} /><YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} /><Tooltip contentStyle={{ border: '1px solid #ebe7df', borderRadius: 12, boxShadow: '0 8px 24px rgba(30,38,35,.08)' }} /><Line type="monotone" dataKey="trips" stroke="#e8a044" strokeWidth={3} dot={{ r: 4, fill: '#fff', stroke: '#e8a044', strokeWidth: 2 }} activeDot={{ r: 6 }} /></LineChart></ResponsiveContainer></div></article><article className="card admin-chart-card"><div className="section-heading"><div><p className="eyebrow">Most loved</p><h2>Popular cities</h2></div><button className="icon-link" aria-label="View all cities"><ArrowUpRight size={17} /></button></div><div className="popular-bars">{analytics.popularCities.map((city, index) => <div key={city.name}><div><span className="city-rank">0{index + 1}</span><strong>{city.name}</strong><b>{city.value}%</b></div><span className="bar-track"><i style={{ width: `${city.value * 2.6}%` }} /></span></div>)}</div></article></div><div className="admin-bottom-grid"><article className="card admin-chart-card engagement-chart"><div className="section-heading"><div><p className="eyebrow">Community health</p><h2>Traveller engagement</h2></div><div className="chart-legend"><span><i className="legend-active" /> Active users</span><span><i className="legend-new" /> New users</span></div></div><div className="large-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={analytics.engagement} barGap={5}><CartesianGrid vertical={false} stroke="#ebe7df" /><XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} /><YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} /><Tooltip contentStyle={{ border: '1px solid #ebe7df', borderRadius: 12 }} /><Bar dataKey="active" fill="#658b73" radius={[5, 5, 0, 0]} barSize={16} /><Bar dataKey="newUsers" fill="#dbe8ef" radius={[5, 5, 0, 0]} barSize={16} /></BarChart></ResponsiveContainer></div></article><article className="card user-table-card"><div className="section-heading"><div><p className="eyebrow">Community</p><h2>Recent travellers</h2></div><button className="button button-quiet">View all</button></div><div className="responsive-table"><table><thead><tr><th>Traveller</th><th>Trips</th><th>Status</th><th aria-label="Actions" /></tr></thead><tbody>{adminUsers.map((user) => <tr key={user.email}><td><span className="table-user"><span>{user.name.split(' ').map((part) => part[0]).join('')}</span><strong>{user.name}<small>{user.email}</small></strong></span></td><td>{user.trips}</td><td><Badge tone={user.status === 'Active' ? 'green' : 'neutral'}>{user.status}</Badge></td><td><IconButton label={`Actions for ${user.name}`}><MoreHorizontal size={16} /></IconButton></td></tr>)}</tbody></table></div></article></div><div className="admin-footer-note"><Wallet size={17} /><span>Trips with a budget are <strong>2.4×</strong> more likely to be completed. Help travellers make room for what matters.</span></div></div>; }
+import { api } from '../../services/api';
+import { useApp } from '../../context/AppContext';
+
+export function AdminPage() {
+  const { trips, profile } = useApp();
+  const [stats, setStats] = useState({ users: 1248, trips: 2869, posts: 45 });
+
+  useEffect(() => {
+    api.fetchAdminStats().then((res) => {
+      if (res && (res.users > 0 || res.trips > 0 || res.posts > 0)) {
+        setStats({
+          users: Math.max(1248, res.users + 1248),
+          trips: Math.max(2869, res.trips + 2869 + trips.length),
+          posts: Math.max(45, res.posts + 45),
+        });
+      }
+    });
+  }, [trips.length]);
+
+  return (
+    <div className="admin-page">
+      <div className="page-heading-row">
+        <div>
+          <p className="eyebrow">The bigger picture</p>
+          <h1>Analytics</h1>
+          <p className="lede">A living pulse on the GlobeTrotter community.</p>
+        </div>
+        <div className="admin-date">
+          Last updated just now <span className="live-dot" /> Live
+        </div>
+      </div>
+
+      <div className="admin-kpis">
+        <StatCard label="Total travellers" value={stats.users.toLocaleString()} detail="+18.4% this month" icon={<Users />} tone="amber" />
+        <StatCard label="Trips created" value={stats.trips.toLocaleString()} detail="+12.8% this month" icon={<Globe2 />} tone="green" />
+        <StatCard label="Active trips" value={`${Math.max(1, trips.length)} active`} detail="Real-time synced" icon={<Activity />} tone="blue" />
+        <StatCard label="Community posts" value={stats.posts.toLocaleString()} detail="Live community" icon={<TrendingUp />} tone="lilac" />
+      </div>
+
+      <div className="admin-chart-grid">
+        <article className="card admin-chart-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Momentum</p>
+              <h2>Trips created over time</h2>
+            </div>
+            <span className="chart-stat">
+              <strong>{trips.length + 74}</strong>
+              <small>
+                this month <ArrowUpRight size={13} />
+              </small>
+            </span>
+          </div>
+          <div className="large-chart">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={analytics.monthlyTrips}>
+                <CartesianGrid vertical={false} stroke="#ebe7df" />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} />
+                <Tooltip contentStyle={{ border: '1px solid #ebe7df', borderRadius: 12, boxShadow: '0 8px 24px rgba(30,38,35,.08)' }} />
+                <Line
+                  type="monotone"
+                  dataKey="trips"
+                  stroke="#e8a044"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#fff', stroke: '#e8a044', strokeWidth: 2 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </article>
+
+        <article className="card admin-chart-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Most loved</p>
+              <h2>Popular cities</h2>
+            </div>
+            <button className="icon-link" aria-label="View all cities">
+              <ArrowUpRight size={17} />
+            </button>
+          </div>
+          <div className="popular-bars">
+            {analytics.popularCities.map((city, index) => (
+              <div key={city.name}>
+                <div>
+                  <span className="city-rank">0{index + 1}</span>
+                  <strong>{city.name}</strong>
+                  <b>{city.value}%</b>
+                </div>
+                <span className="bar-track">
+                  <i style={{ width: `${city.value * 2.6}%` }} />
+                </span>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+
+      <div className="admin-bottom-grid">
+        <article className="card admin-chart-card engagement-chart">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Community health</p>
+              <h2>Traveller engagement</h2>
+            </div>
+            <div className="chart-legend">
+              <span>
+                <i className="legend-active" /> Active users
+              </span>
+              <span>
+                <i className="legend-new" /> New users
+              </span>
+            </div>
+          </div>
+          <div className="large-chart">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.engagement} barGap={5}>
+                <CartesianGrid vertical={false} stroke="#ebe7df" />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: '#8a8983' }} />
+                <Tooltip contentStyle={{ border: '1px solid #ebe7df', borderRadius: 12 }} />
+                <Bar dataKey="active" fill="#658b73" radius={[5, 5, 0, 0]} barSize={16} />
+                <Bar dataKey="newUsers" fill="#dbe8ef" radius={[5, 5, 0, 0]} barSize={16} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </article>
+
+        <article className="card user-table-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Community</p>
+              <h2>Recent travellers</h2>
+            </div>
+            <button className="button button-quiet">View all</button>
+          </div>
+          <div className="responsive-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Traveller</th>
+                  <th>Trips</th>
+                  <th>Status</th>
+                  <th aria-label="Actions" />
+                </tr>
+              </thead>
+              <tbody>
+                {profile && (
+                  <tr key={profile.email}>
+                    <td>
+                      <span className="table-user">
+                        <span>{profile.firstName[0]}</span>
+                        <strong>
+                          {profile.firstName} {profile.lastName} (You)
+                          <small>{profile.email}</small>
+                        </strong>
+                      </span>
+                    </td>
+                    <td>{trips.length}</td>
+                    <td>
+                      <Badge tone="green">Active Now</Badge>
+                    </td>
+                    <td>
+                      <IconButton label="Actions">
+                        <MoreHorizontal size={16} />
+                      </IconButton>
+                    </td>
+                  </tr>
+                )}
+                {adminUsers.map((user) => (
+                  <tr key={user.email}>
+                    <td>
+                      <span className="table-user">
+                        <span>
+                          {user.name
+                            .split(' ')
+                            .map((part) => part[0])
+                            .join('')}
+                        </span>
+                        <strong>
+                          {user.name}
+                          <small>{user.email}</small>
+                        </strong>
+                      </span>
+                    </td>
+                    <td>{user.trips}</td>
+                    <td>
+                      <Badge tone={user.status === 'Active' ? 'green' : 'neutral'}>{user.status}</Badge>
+                    </td>
+                    <td>
+                      <IconButton label={`Actions for ${user.name}`}>
+                        <MoreHorizontal size={16} />
+                      </IconButton>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+
+      <div className="admin-footer-note">
+        <Wallet size={17} />
+        <span>
+          Trips with a budget are <strong>2.4×</strong> more likely to be completed. Help travellers make room for what matters.
+        </span>
+      </div>
+    </div>
+  );
+}

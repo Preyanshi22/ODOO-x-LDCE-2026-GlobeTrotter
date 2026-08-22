@@ -220,3 +220,15 @@ __marimo__/
 venv/
 __pycache__/
 .env
+
+# Node & Frontend dependencies/builds
+node_modules/
+**/node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+**/dist/
+.vscode/
+*.tsbuildinfo
+.DS_Store
+
