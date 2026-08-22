@@ -45,7 +45,7 @@ export function ProfilePage() {
         <aside className="profile-nav card">
           <div className="profile-card-top">
             <div className="profile-avatar-wrap">
-              <SafeImage src={form.avatar} alt={`${form.firstName} ${form.lastName}`} />
+              <SafeImage src={form.avatar && form.avatar.trim() !== '' ? form.avatar : 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'} alt={`${form.firstName} ${form.lastName}`} />
               <button aria-label="Change profile photo"><Camera size={14} /></button>
             </div>
             <h2>{form.firstName} {form.lastName}</h2>

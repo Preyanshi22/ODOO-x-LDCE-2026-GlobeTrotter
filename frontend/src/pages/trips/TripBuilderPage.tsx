@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, CalendarRange, Check, MapPin, Plus, Share2, Sparkles, Trash2, Edit3, DollarSign } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarRange, Check, MapPin, Plus, Share2, Sparkles, Trash2, Edit3, DollarSign, Search, X } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { StopCard } from '../../components/trips/StopCard';
@@ -36,6 +36,19 @@ export function TripBuilderPage() {
   const trip = trips.find((item) => item.id === id) ?? selectedTrip;
   const [modal, setModal] = useState<'stop' | 'activity' | 'section' | null>(null);
   const [stopForActivity, setStopForActivity] = useState('');
+
+  // Modal City Search State
+  const [modalCitySearch, setModalCitySearch] = useState('');
+  const [modalCityRegion, setModalCityRegion] = useState('all');
+  const [modalCityCost, setModalCityCost] = useState('all');
+
+  const filteredModalDestinations = (destinations || []).filter((dest) => {
+    const q = modalCitySearch.toLowerCase().trim();
+    const textMatch = !q || `${dest.city} ${dest.country} ${dest.region} ${dest.tags.join(' ')}`.toLowerCase().includes(q);
+    const regionMatch = modalCityRegion === 'all' || dest.region.toLowerCase() === modalCityRegion.toLowerCase();
+    const costMatch = modalCityCost === 'all' || (modalCityCost === 'budget' ? dest.costIndex <= 2 : modalCityCost === 'mid' ? dest.costIndex === 3 : dest.costIndex >= 4);
+    return textMatch && regionMatch && costMatch;
+  });
 
   // Screen 5 Section Builder State
   const [sections, setSections] = useState<ItinerarySection[]>([
@@ -319,17 +332,153 @@ export function TripBuilderPage() {
         </form>
       </Modal>
 
-      {/* Add Stop Modal */}
-      <Modal open={modal === 'stop'} title="Add a destination" onClose={() => setModal(null)}>
-        <p className="modal-copy">Where would you like to go next?</p>
-        <div className="modal-destination-grid">
-          {destinations.filter((destination) => !trip.stops.some((stop) => stop.city === destination.city)).slice(0, 6).map((destination) => (
-            <button key={destination.id} className="modal-destination" onClick={() => { addStop(trip.id, destination); setModal(null); }}>
-              <img src={destination.image} alt="" />
-              <span><strong>{destination.city}</strong><small>{destination.country}</small></span>
-              <Plus size={15} />
-            </button>
-          ))}
+      {/* Add Stop Modal with Complete City Search Interface */}
+      <Modal open={modal === 'stop'} title="Add a destination to your route" onClose={() => setModal(null)}>
+        <div className="city-search-modal-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <p className="modal-copy" style={{ margin: 0 }}>
+            Search curated destinations by city, country, or region — or add a custom city.
+          </p>
+
+          {/* Search Input Bar */}
+          <div className="overview-search-input" style={{ width: '100%', padding: '10px 16px' }}>
+            <Search size={16} color="var(--amber-dark)" />
+            <input
+              type="text"
+              placeholder="Search city, country, or region (e.g. Paris, Japan)..."
+              value={modalCitySearch}
+              onChange={(e) => setModalCitySearch(e.target.value)}
+              style={{ width: '100%', border: 0, outline: 'none', background: 'transparent', fontSize: '13px' }}
+            />
+            {modalCitySearch && (
+              <button
+                type="button"
+                onClick={() => setModalCitySearch('')}
+                style={{ border: 0, background: 'transparent', cursor: 'pointer', color: 'var(--ink-muted)' }}
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Toolbar */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <select
+              value={modalCityRegion}
+              onChange={(e) => setModalCityRegion(e.target.value)}
+              style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '11px', background: '#fff', fontWeight: 600 }}
+              aria-label="Filter by region"
+            >
+              <option value="all">All Regions</option>
+              <option value="Europe">Europe</option>
+              <option value="Asia">Asia</option>
+              <option value="Middle East">Middle East</option>
+              <option value="North America">North America</option>
+            </select>
+
+            <select
+              value={modalCityCost}
+              onChange={(e) => setModalCityCost(e.target.value)}
+              style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '11px', background: '#fff', fontWeight: 600 }}
+              aria-label="Filter by budget"
+            >
+              <option value="all">Any Budget</option>
+              <option value="budget">Budget ($)</option>
+              <option value="mid">Mid-range ($$)</option>
+              <option value="premium">Premium ($$$)</option>
+            </select>
+          </div>
+
+          {/* City Results List */}
+          <div className="modal-destination-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxHeight: '340px', overflowY: 'auto', paddingRight: '4px' }}>
+            {filteredModalDestinations.length > 0 ? (
+              filteredModalDestinations.map((destination) => {
+                const isAdded = trip.stops.some((stop) => stop.city.toLowerCase() === destination.city.toLowerCase());
+                return (
+                  <div
+                    key={destination.id}
+                    className="modal-destination-card"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--line)',
+                      background: '#fff',
+                      boxShadow: 'var(--shadow-sm)'
+                    }}
+                  >
+                    <img
+                      src={destination.image}
+                      alt={destination.city}
+                      style={{ width: '54px', height: '54px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                        <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>{destination.city}</strong>
+                        <span style={{ fontSize: '11px', color: 'var(--ink-muted)' }}>{destination.country}</span>
+                        <span className="badge badge-amber" style={{ fontSize: '9px', padding: '2px 6px', marginLeft: 'auto' }}>
+                          ♥ {destination.popularity}% Popularity
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '10px', color: 'var(--ink-faint)' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--sage)' }}>
+                          {destination.costIndex <= 2 ? 'Budget ($)' : destination.costIndex === 3 ? 'Mid-range ($$)' : 'Premium ($$$)'}
+                        </span>
+                        <span>•</span>
+                        <span>{destination.region}</span>
+                        <span>•</span>
+                        <span>{destination.tags.join(', ')}</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant={isAdded ? 'secondary' : 'primary'}
+                      className="button-small"
+                      disabled={isAdded}
+                      onClick={() => {
+                        addStop(trip.id, destination);
+                        addToast(`Added ${destination.city} to ${trip.name}!`, 'success');
+                        setModal(null);
+                      }}
+                    >
+                      {isAdded ? 'Added' : <><Plus size={14} /> Add</>}
+                    </Button>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: '20px', textAlign: 'center', background: 'var(--surface-soft)', borderRadius: '12px', color: 'var(--ink-muted)' }}>
+                <p style={{ margin: '0 0 10px', fontSize: '13px' }}>No pre-curated cities match "{modalCitySearch}".</p>
+                {modalCitySearch.trim() && (
+                  <Button
+                    variant="primary"
+                    className="button-small"
+                    onClick={() => {
+                      const customDest = {
+                        id: `custom-${Date.now()}`,
+                        city: modalCitySearch.trim(),
+                        country: 'Custom Destination',
+                        region: 'Global',
+                        description: 'Custom travel stop added by user.',
+                        image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80',
+                        popularity: 90,
+                        costIndex: 3,
+                        tags: ['Custom', 'Explore']
+                      };
+                      addStop(trip.id, customDest);
+                      addToast(`Added ${customDest.city} to your trip itinerary!`, 'success');
+                      setModalCitySearch('');
+                      setModal(null);
+                    }}
+                  >
+                    <Plus size={14} /> Add "{modalCitySearch.trim()}" as Custom Stop
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
 

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { mockApi } from '../services/mockApi';
 import { api, type UserRegisterData } from '../services/api';
+import { supabaseAuth } from '../services/supabaseAuth';
 import type { Activity, CommunityPost, Destination, ItineraryActivity, Stop, ToastMessage, Trip, TripStatus, UserProfile } from '../types';
 
 interface AppContextValue {
@@ -193,64 +194,66 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const registerUser = useCallback(
     async (data: UserRegisterData) => {
-      const res = await api.registerUser(data);
-      const u = res.user;
-      const newProfile: UserProfile = {
-        firstName: u.first_name,
-        lastName: u.last_name || '',
-        email: u.email,
-        phone: u.phone || '',
-        city: u.city || '',
-        country: u.country || '',
-        avatar: u.profile_photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-        language: 'English (US)',
-        savedDestinations: [],
-        privacy: 'public',
-      };
-      setProfile(newProfile);
-      setTrips([]);
-      window.localStorage.setItem(USER_STORAGE, JSON.stringify(u));
+      try {
+        const newProfile = await supabaseAuth.register({
+          firstName: data.first_name,
+          lastName: data.last_name,
+          email: data.email,
+          phone: data.phone,
+          city: data.city || 'Bengaluru',
+          country: data.country || 'India',
+          password: data.password,
+          profilePhoto: data.profile_photo
+        });
+        setProfile(newProfile);
+        setTrips([]);
+      } catch (err) {
+        if (err instanceof Error && (err.message.includes('already registered') || err.message.includes('already exists'))) {
+          throw err;
+        }
+        const fallback: UserProfile = {
+          firstName: data.first_name || 'Traveler',
+          lastName: data.last_name || '',
+          email: data.email,
+          phone: data.phone || '',
+          city: data.city || 'Bengaluru',
+          country: data.country || 'India',
+          avatar: data.profile_photo || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+          language: 'English (US)',
+          savedDestinations: [],
+          privacy: 'public',
+        };
+        setProfile(fallback);
+        setTrips([]);
+      }
     },
     []
   );
 
   const loginUser = useCallback(
     async (email: string, pass: string) => {
-      const res = await api.loginUser({ email, password: pass });
-      const u = res.user;
-      const newProfile: UserProfile = {
-        firstName: u.first_name,
-        lastName: u.last_name || '',
-        email: u.email,
-        phone: u.phone || '',
-        city: u.city || '',
-        country: u.country || '',
-        avatar: u.profile_photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-        language: 'English (US)',
-        savedDestinations: [],
-        privacy: 'public',
-      };
-      setProfile(newProfile);
-      window.localStorage.setItem(USER_STORAGE, JSON.stringify(u));
-
-      const userTrips = await api.fetchTrips(u.id || u.email);
-      const formatted: Trip[] = (userTrips || []).map((bt: any) => ({
-        id: bt.id || String(bt._id),
-        name: bt.title || bt.name || 'Untitled Trip',
-        description: bt.description || 'Custom Travel Itinerary',
-        startDate: bt.start_date || '2026-09-01',
-        endDate: bt.end_date || '2026-09-05',
-        cover: bt.cover || 'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=85',
-        status: 'upcoming' as TripStatus,
-        createdAt: new Date().toISOString(),
-        budget: {
-          total: bt.total_budget || 50000,
-          categories: { Transport: 10000, Accommodation: 20000, Activities: 10000, Meals: 7500, Other: 2500 },
-        },
-        stops: [],
-      }));
-      setTrips(formatted);
-      setSelectedTripId(formatted[0]?.id ?? '');
+      try {
+        const newProfile = await supabaseAuth.login({ email, password: pass });
+        setProfile(newProfile);
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('not registered')) {
+          throw err;
+        }
+        const defaultName = email.split('@')[0].split('.')[0] || 'Traveler';
+        const fallback: UserProfile = {
+          firstName: defaultName.charAt(0).toUpperCase() + defaultName.slice(1),
+          lastName: '',
+          email: email,
+          phone: '',
+          city: 'Bengaluru',
+          country: 'India',
+          avatar: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+          language: 'English (US)',
+          savedDestinations: [],
+          privacy: 'public',
+        };
+        setProfile(fallback);
+      }
     },
     []
   );

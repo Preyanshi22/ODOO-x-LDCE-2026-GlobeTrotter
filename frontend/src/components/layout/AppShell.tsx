@@ -8,12 +8,16 @@ import { AIChatWidget } from '../ai/AIChatWidget';
 
 const links = [{ to: '/', label: 'Overview', icon: LayoutDashboard }, { to: '/trips', label: 'My trips', icon: BriefcaseBusiness }, { to: '/explore', label: 'Explore', icon: Compass }, { to: '/calendar', label: 'Calendar', icon: CalendarDays }, { to: '/community', label: 'Community', icon: MessageCircle }];
 
+const DEFAULT_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { profile, selectedTripId, setSelectedTripId, trips, toasts, dismissToast } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const close = () => setMobileOpen(false);
+
+  const avatarSrc = profile?.avatar && profile.avatar.trim() !== '' ? profile.avatar : DEFAULT_AVATAR;
 
   return (
     <div className="app-frame">
@@ -48,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <div className="sidebar-bottom">
           <NavLink to="/profile" onClick={close} className="profile-mini">
-            <SafeImage src={profile?.avatar} alt="" />
+            <SafeImage src={avatarSrc} alt="" />
             <span><strong>{profile?.firstName ?? 'Traveller'}</strong><small>View profile</small></span>
             <Settings size={16} />
           </NavLink>
@@ -82,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span />
             </IconButton>
             <NavLink to="/profile" className="top-avatar">
-              <SafeImage src={profile?.avatar} alt={profile ? `${profile.firstName} ${profile.lastName}` : 'Profile'} />
+              <SafeImage src={avatarSrc} alt={profile ? `${profile.firstName} ${profile.lastName}` : 'Profile'} />
             </NavLink>
           </div>
         </header>
