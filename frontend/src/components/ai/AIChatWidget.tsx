@@ -1,5 +1,6 @@
-import { Bot, MessageSquare, Send, Sparkles, X } from 'lucide-react';
+import { Bot, Compass, Send, Sparkles, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
 
 interface ChatMessage {
@@ -10,6 +11,7 @@ interface ChatMessage {
 }
 
 export function AIChatWidget() {
+  const { trips, selectedTripId, setSelectedTripId } = useApp();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,12 +19,13 @@ export function AIChatWidget() {
     {
       id: '1',
       sender: 'ai',
-      text: "Hello! I'm GlobeTrotter AI. Ask me for itinerary suggestions, hidden culinary gems, or budget planning tips for any destination!",
+      text: "Hello! I'm GlobeTrotter AI. Select a trip or ask me for itinerary suggestions, hidden culinary gems, or budget planning tips!",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const activeTrip = trips.find((t) => t.id === selectedTripId);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,7 +38,7 @@ export function AIChatWidget() {
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: 'user',
-      text,
+      text: activeTrip ? `[${activeTrip.name}] ${text}` : text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -44,21 +47,26 @@ export function AIChatWidget() {
     setLoading(true);
 
     try {
-      // Call backend AI endpoint
+      const destination = activeTrip
+        ? activeTrip.stops.map((s) => s.city).join(', ') || activeTrip.name
+        : text;
+
+      const budget = activeTrip?.budget?.total ?? 50000;
+
       const aiData = await api.generateAIItinerary({
-        destination: text,
-        days: 3,
-        budget: 50000,
+        destination,
+        days: 4,
+        budget,
         travel_style: 'balanced',
       });
 
       const responseText = aiData?.title
-        ? `Here is an AI-generated suggestion for ${aiData.title}:\n\n` +
+        ? `✦ AI Recommendation for ${activeTrip ? activeTrip.name : destination}:\n\n` +
           aiData.activities
             .slice(0, 4)
             .map((act: any) => `• Day ${act.day_number}: ${act.name} (₹${act.cost})`)
             .join('\n')
-        : `GlobeTrotter AI recommendation for "${text}": Plan 3-4 days exploring key cultural landmarks, opt for local boutique stays, and allocate ~40% budget to lodging & 25% to gourmet dining.`;
+        : `GlobeTrotter AI tip for ${destination}: Plan 3-4 days exploring key landmarks, reserve local boutique stays, and allocate ~40% to lodging & 25% to culinary experiences.`;
 
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -72,7 +80,7 @@ export function AIChatWidget() {
       const fallbackMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: `For ${text}, I recommend visiting during spring/autumn for optimal weather. Allocate ₹50,000 for a 4-day experience covering historic sites, local transport, and curated dining.`,
+        text: `For ${activeTrip ? activeTrip.name : text}, I recommend visiting during spring/autumn. Allocate your budget towards historic tours, local transport, and curated dining experiences.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
@@ -120,9 +128,9 @@ export function AIChatWidget() {
             position: 'fixed',
             bottom: '84px',
             right: '24px',
-            width: '380px',
+            width: '390px',
             maxWidth: 'calc(100vw - 48px)',
-            height: '520px',
+            height: '540px',
             maxHeight: 'calc(100vh - 120px)',
             zIndex: 9999,
             background: '#ffffff',
@@ -137,7 +145,7 @@ export function AIChatWidget() {
           {/* Header */}
           <div
             style={{
-              padding: '16px 20px',
+              padding: '14px 18px',
               background: '#111827',
               color: '#ffffff',
               display: 'flex',
@@ -149,7 +157,7 @@ export function AIChatWidget() {
               <Bot size={20} style={{ color: '#f59e0b' }} />
               <div>
                 <strong style={{ display: 'block', fontSize: '0.95rem' }}>GlobeTrotter AI</strong>
-                <small style={{ color: '#9ca3af', fontSize: '0.75rem' }}>Luxury Travel Planner</small>
+                <small style={{ color: '#9ca3af', fontSize: '0.75rem' }}>Luxury Travel Assistant</small>
               </div>
             </div>
             <button
@@ -159,6 +167,52 @@ export function AIChatWidget() {
               <X size={18} />
             </button>
           </div>
+
+          {/* Trip Selector Bar */}
+          <div
+            style={{
+              padding: '8px 14px',
+              background: '#1f2937',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              borderBottom: '1px solid #374151',
+              fontSize: '0.8rem',
+            }}
+          >
+            <Compass size={14} style={{ color: '#f59e0b' }} />
+            <span style={{ color: '#9ca3af', whiteSpace: 'nowrap' }}>Active Trip:</span>
+            <select
+              value={selectedTripId}
+              onChange={(e) => setSelectedTripId(e.target.value)}
+              style={{
+                flex: 1,
+                background: '#374151',
+                color: '#ffffff',
+                border: '1px solid #4b5563',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                fontSize: '0.78rem',
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="">General Advice (No Trip Selected)</option>
+              {trips.map((trip) => (
+                <option key={trip.id} value={trip.id}>
+                  {trip.name} ({trip.stops.map((s) => s.city).join(', ') || 'Plan'})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Active Trip Info Badge */}
+          {activeTrip && (
+            <div style={{ padding: '6px 14px', background: '#fffbe6', borderBottom: '1px solid #ffe58f', fontSize: '0.75rem', color: '#873800' }}>
+              📍 <strong>Focusing AI on:</strong> {activeTrip.name} (Budget: ₹{activeTrip.budget.total.toLocaleString()})
+            </div>
+          )}
 
           {/* Chat Messages Container */}
           <div style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', background: '#f9fafb' }}>
@@ -187,7 +241,7 @@ export function AIChatWidget() {
             ))}
             {loading && (
               <div style={{ alignSelf: 'flex-start', padding: '10px 14px', borderRadius: '14px', background: '#ffffff', border: '1px solid #e5e7eb', fontSize: '0.85rem', color: '#6b7280' }}>
-                ✦ Thinking & planning...
+                ✦ Analyzing {activeTrip ? activeTrip.name : 'destination'}...
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -196,22 +250,22 @@ export function AIChatWidget() {
           {/* Quick Prompts */}
           <div style={{ padding: '8px 12px', background: '#ffffff', borderTop: '1px solid #f3f4f6', display: 'flex', gap: '6px', overflowX: 'auto' }}>
             <button
-              onClick={() => sendMessage('Kyoto 3-Day Luxury Itinerary')}
+              onClick={() => sendMessage('Give me budget breakdown advice')}
               style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px', background: '#f3f4f6', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
-              🇯🇵 Kyoto 3-Day
+              💰 Budget Advice
             </button>
             <button
-              onClick={() => sendMessage('Paris Winter Budget Tips')}
+              onClick={() => sendMessage('Suggest top 3 culinary spots')}
               style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px', background: '#f3f4f6', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
-              🇫🇷 Paris Tips
+              🍷 Culinary Spots
             </button>
             <button
-              onClick={() => sendMessage('Santorini Coast Highlights')}
+              onClick={() => sendMessage('Highlight hidden local gems')}
               style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '12px', background: '#f3f4f6', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
-              🇬🇷 Santorini Highlights
+              ✨ Hidden Gems
             </button>
           </div>
 
@@ -226,7 +280,7 @@ export function AIChatWidget() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask AI for itinerary ideas..."
+              placeholder={activeTrip ? `Ask AI about ${activeTrip.name}...` : 'Ask AI for itinerary ideas...'}
               style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '0.875rem', outline: 'none' }}
             />
             <button
